@@ -6,6 +6,7 @@ Appointment scheduling and automated reminders SaaS for small businesses in the 
 - Technical plan (Portuguese): [`docs/saas-plan/PLANO-TECNICO.md`](docs/saas-plan/PLANO-TECNICO.md)
 - Phase 2 setup guide (Portuguese): [`docs/saas-plan/FASE-2-AMBIENTE.md`](docs/saas-plan/FASE-2-AMBIENTE.md)
 - Phase 3 auth and database guide (Portuguese): [`docs/saas-plan/FASE-3-AUTH-BANCO.md`](docs/saas-plan/FASE-3-AUTH-BANCO.md)
+- Phase 4 dashboard and clients guide (Portuguese): [`docs/saas-plan/FASE-4-DASHBOARD-CLIENTES.md`](docs/saas-plan/FASE-4-DASHBOARD-CLIENTES.md)
 
 ## Stack
 

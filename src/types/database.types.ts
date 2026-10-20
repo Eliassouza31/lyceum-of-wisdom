@@ -101,6 +101,108 @@ export type Database = {
         };
         Relationships: [];
       };
+      clients: {
+        Row: {
+          business_id: string;
+          created_at: string;
+          deleted_at: string | null;
+          email: string | null;
+          email_reminders_consent: boolean;
+          first_name: string;
+          id: string;
+          last_name: string;
+          notes: string | null;
+          phone_e164: string | null;
+          sms_reminders_consent: boolean;
+          updated_at: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          business_id: string;
+          created_at?: string;
+          deleted_at?: string | null;
+          email?: string | null;
+          email_reminders_consent?: boolean;
+          first_name: string;
+          id?: string;
+          last_name?: string;
+          notes?: string | null;
+          phone_e164?: string | null;
+          sms_reminders_consent?: boolean;
+          updated_at?: string;
+        };
+        Update: {
+          business_id?: string;
+          created_at?: string;
+          deleted_at?: string | null;
+          email?: string | null;
+          email_reminders_consent?: boolean;
+          first_name?: string;
+          id?: string;
+          last_name?: string;
+          notes?: string | null;
+          phone_e164?: string | null;
+          sms_reminders_consent?: boolean;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "clients_business_id_fkey";
+            columns: ["business_id"];
+            isOneToOne: false;
+            referencedRelation: "businesses";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      consent_events: {
+        Row: {
+          action: Database["public"]["Enums"]["consent_action"];
+          business_id: string;
+          channel: Database["public"]["Enums"]["consent_channel"];
+          client_id: string;
+          created_at: string;
+          id: string;
+          ip_address: string | null;
+          recorded_by: string | null;
+          source: Database["public"]["Enums"]["consent_source"];
+          user_agent: string | null;
+        };
+        ComputedFields: never;
+        Insert: {
+          action: Database["public"]["Enums"]["consent_action"];
+          business_id: string;
+          channel: Database["public"]["Enums"]["consent_channel"];
+          client_id: string;
+          created_at?: string;
+          id?: string;
+          ip_address?: string | null;
+          recorded_by?: string | null;
+          source: Database["public"]["Enums"]["consent_source"];
+          user_agent?: string | null;
+        };
+        Update: {
+          action?: Database["public"]["Enums"]["consent_action"];
+          business_id?: string;
+          channel?: Database["public"]["Enums"]["consent_channel"];
+          client_id?: string;
+          created_at?: string;
+          id?: string;
+          ip_address?: string | null;
+          recorded_by?: string | null;
+          source?: Database["public"]["Enums"]["consent_source"];
+          user_agent?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "consent_events_client_id_business_id_fkey";
+            columns: ["client_id", "business_id"];
+            isOneToOne: false;
+            referencedRelation: "clients";
+            referencedColumns: ["id", "business_id"];
+          },
+        ];
+      };
       profiles: {
         Row: {
           created_at: string;
@@ -143,6 +245,14 @@ export type Database = {
       is_valid_timezone: { Args: { p_timezone: string }; Returns: boolean };
     };
     Enums: {
+      consent_action: "granted" | "revoked";
+      consent_channel: "email" | "sms";
+      consent_source:
+        | "staff_entry"
+        | "import"
+        | "unsubscribe_link"
+        | "sms_stop"
+        | "booking_form";
       member_role: "owner" | "admin" | "staff";
     };
     CompositeTypes: {
@@ -274,6 +384,15 @@ export const Constants = {
   },
   public: {
     Enums: {
+      consent_action: ["granted", "revoked"],
+      consent_channel: ["email", "sms"],
+      consent_source: [
+        "staff_entry",
+        "import",
+        "unsubscribe_link",
+        "sms_stop",
+        "booking_form",
+      ],
       member_role: ["owner", "admin", "staff"],
     },
   },
