@@ -34,6 +34,70 @@ export type Database = {
   };
   public: {
     Tables: {
+      appointments: {
+        Row: {
+          business_id: string;
+          client_id: string;
+          created_at: string;
+          created_by: string | null;
+          deleted_at: string | null;
+          ends_at: string;
+          id: string;
+          location: string | null;
+          notes: string | null;
+          starts_at: string;
+          status: Database["public"]["Enums"]["appointment_status"];
+          title: string;
+          updated_at: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          business_id: string;
+          client_id: string;
+          created_at?: string;
+          created_by?: string | null;
+          deleted_at?: string | null;
+          ends_at: string;
+          id?: string;
+          location?: string | null;
+          notes?: string | null;
+          starts_at: string;
+          status?: Database["public"]["Enums"]["appointment_status"];
+          title: string;
+          updated_at?: string;
+        };
+        Update: {
+          business_id?: string;
+          client_id?: string;
+          created_at?: string;
+          created_by?: string | null;
+          deleted_at?: string | null;
+          ends_at?: string;
+          id?: string;
+          location?: string | null;
+          notes?: string | null;
+          starts_at?: string;
+          status?: Database["public"]["Enums"]["appointment_status"];
+          title?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "appointments_business_id_fkey";
+            columns: ["business_id"];
+            isOneToOne: false;
+            referencedRelation: "businesses";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "appointments_client_id_business_id_fkey";
+            columns: ["client_id", "business_id"];
+            isOneToOne: false;
+            referencedRelation: "clients";
+            referencedColumns: ["id", "business_id"];
+          },
+        ];
+      };
       business_members: {
         Row: {
           business_id: string;
@@ -245,6 +309,7 @@ export type Database = {
       is_valid_timezone: { Args: { p_timezone: string }; Returns: boolean };
     };
     Enums: {
+      appointment_status: "scheduled" | "cancelled" | "completed" | "no_show";
       consent_action: "granted" | "revoked";
       consent_channel: "email" | "sms";
       consent_source:
@@ -384,6 +449,7 @@ export const Constants = {
   },
   public: {
     Enums: {
+      appointment_status: ["scheduled", "cancelled", "completed", "no_show"],
       consent_action: ["granted", "revoked"],
       consent_channel: ["email", "sms"],
       consent_source: [

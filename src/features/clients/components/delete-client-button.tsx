@@ -15,7 +15,7 @@ export function DeleteClientButton({
       onSubmit={(event) => {
         if (
           !window.confirm(
-            `Remove ${clientName}? They will no longer appear in your client list.`,
+            `Remove ${clientName}? They will no longer appear in your client list, and their upcoming appointments will be cancelled.`,
           )
         ) {
           event.preventDefault();

@@ -3,6 +3,9 @@ import Link from "next/link";
 import { Suspense } from "react";
 
 import { Alert } from "@/components/ui/alert";
+import { buttonClasses } from "@/components/ui/button";
+import { AppointmentList } from "@/features/appointments/components/appointment-list";
+import { getAppointmentOverview } from "@/features/appointments/queries";
 import { requireBusinessContext } from "@/features/business/queries";
 import { timezoneLabel } from "@/features/business/timezones";
 import { getClientStats } from "@/features/clients/queries";
@@ -38,11 +41,13 @@ async function DashboardContent({
 }: {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
-  const [{ business, fullName }, params, stats] = await Promise.all([
-    requireBusinessContext(),
-    searchParams,
-    getClientStats(),
-  ]);
+  const [{ business, fullName }, params, stats, appointments] =
+    await Promise.all([
+      requireBusinessContext(),
+      searchParams,
+      getClientStats(),
+      getAppointmentOverview(),
+    ]);
   const firstName = fullName.split(" ")[0];
   const setupSteps: SetupStep[] = [
     { title: "Create your account", done: true },
@@ -52,7 +57,11 @@ async function DashboardContent({
       done: stats.total > 0,
       href: "/clients/new",
     },
-    { title: "Schedule an appointment", done: false },
+    {
+      title: "Schedule an appointment",
+      done: appointments.total > 0,
+      href: "/appointments/new",
+    },
     { title: "Turn on email reminders", done: false },
   ];
 
@@ -70,13 +79,62 @@ async function DashboardContent({
         </p>
       </div>
 
-      <section aria-label="Summary" className="grid gap-4 sm:grid-cols-2">
+      <section
+        aria-label="Summary"
+        className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4"
+      >
+        <StatCard
+          label="Appointments today"
+          value={appointments.today}
+          href="/calendar?view=day"
+        />
+        <StatCard
+          label="Upcoming appointments"
+          value={appointments.upcoming}
+          href="/appointments"
+        />
         <StatCard label="Clients" value={stats.total} href="/clients" />
         <StatCard
           label="Clients accepting email reminders"
           value={stats.emailConsent}
           href="/clients"
         />
+      </section>
+
+      <section aria-labelledby="next-appointments" className="space-y-3">
+        <div className="flex items-center justify-between gap-4">
+          <h2
+            id="next-appointments"
+            className="text-base font-semibold text-zinc-900 dark:text-zinc-100"
+          >
+            Next appointments
+          </h2>
+          <Link
+            href="/calendar"
+            className="text-sm font-medium text-indigo-600 hover:text-indigo-500 dark:text-indigo-400"
+          >
+            Open calendar
+          </Link>
+        </div>
+        {appointments.next.length === 0 ? (
+          <div className="rounded-2xl bg-white p-6 text-center shadow-sm ring-1 ring-zinc-200 dark:bg-zinc-900 dark:ring-zinc-800">
+            <p className="text-sm text-zinc-600 dark:text-zinc-400">
+              Nothing scheduled yet.
+            </p>
+            <Link
+              href="/appointments/new"
+              className={buttonClasses("primary", "mt-4")}
+            >
+              New appointment
+            </Link>
+          </div>
+        ) : (
+          <AppointmentList
+            appointments={appointments.next}
+            timeZone={business.timezone}
+            showDate
+          />
+        )}
       </section>
 
       <section className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-zinc-200 dark:bg-zinc-900 dark:ring-zinc-800">

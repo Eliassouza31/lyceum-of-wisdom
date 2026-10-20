@@ -5,6 +5,9 @@ import { Suspense } from "react";
 import { z } from "zod";
 
 import { Alert } from "@/components/ui/alert";
+import { buttonClasses } from "@/components/ui/button";
+import { AppointmentList } from "@/features/appointments/components/appointment-list";
+import { listClientAppointments } from "@/features/appointments/queries";
 import { requireBusinessContext } from "@/features/business/queries";
 import {
   deleteClientAction,
@@ -30,10 +33,11 @@ async function ClientDetails({
   const [{ id }, query] = await Promise.all([params, searchParams]);
   if (!z.uuid().safeParse(id).success) notFound();
 
-  const [{ business }, client, history] = await Promise.all([
+  const [{ business }, client, history, appointments] = await Promise.all([
     requireBusinessContext(),
     getClient(id),
     getConsentHistory(id),
+    listClientAppointments(id),
   ]);
   const name = clientName(client);
   const saved = typeof query.saved === "string" ? query.saved : undefined;
@@ -58,6 +62,35 @@ async function ClientDetails({
       {saved && SAVED_MESSAGES[saved] ? (
         <Alert tone="success">{SAVED_MESSAGES[saved]}</Alert>
       ) : null}
+
+      <section aria-labelledby="client-appointments" className="space-y-3">
+        <div className="flex items-center justify-between gap-4">
+          <h2
+            id="client-appointments"
+            className="text-base font-semibold text-zinc-900 dark:text-zinc-100"
+          >
+            Appointments
+          </h2>
+          <Link
+            href={`/appointments/new?clientId=${client.id}`}
+            className={buttonClasses("secondary", "px-3 py-1.5")}
+          >
+            Book appointment
+          </Link>
+        </div>
+        {appointments.length === 0 ? (
+          <p className="text-sm text-zinc-500 dark:text-zinc-400">
+            No appointments yet.
+          </p>
+        ) : (
+          <AppointmentList
+            appointments={appointments}
+            timeZone={business.timezone}
+            showDate
+            showClient={false}
+          />
+        )}
+      </section>
 
       <section className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-zinc-200 dark:bg-zinc-900 dark:ring-zinc-800">
         <h2 className="mb-5 text-base font-semibold text-zinc-900 dark:text-zinc-100">
@@ -107,7 +140,8 @@ async function ClientDetails({
             Remove client
           </h2>
           <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
-            Their consent history is kept for your records.
+            Their consent history is kept for your records. Their upcoming
+            appointments are cancelled.
           </p>
         </div>
         <DeleteClientButton
