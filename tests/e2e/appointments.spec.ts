@@ -154,7 +154,9 @@ test("book, view, reschedule, cancel and delete an appointment", async ({
   page.once("dialog", (dialog) => dialog.accept());
   await page.getByRole("button", { name: "Cancel appointment" }).click();
   await expect(page.getByText("The appointment was cancelled.")).toBeVisible();
-  await expect(page.getByText("Cancelled", { exact: true })).toBeVisible();
+  // Scoped to the header: the appointment's reminders are cancelled too.
+  const header = page.getByRole("heading", { name: "Haircut" }).locator("..");
+  await expect(header.getByText("Cancelled", { exact: true })).toBeVisible();
   await page.getByRole("button", { name: "Restore as scheduled" }).click();
   await expect(
     page.getByText("The appointment is scheduled again."),
