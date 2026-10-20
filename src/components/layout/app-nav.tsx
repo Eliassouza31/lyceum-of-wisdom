@@ -11,7 +11,8 @@ type NavItem = { href: string; label: string; available: boolean };
 // Items become available as each phase ships.
 export const NAV_ITEMS: NavItem[] = [
   { href: "/dashboard", label: "Dashboard", available: true },
-  { href: "/calendar", label: "Calendar", available: false },
+  { href: "/calendar", label: "Calendar", available: true },
+  { href: "/appointments", label: "Appointments", available: true },
   { href: "/clients", label: "Clients", available: true },
   { href: "/reminders", label: "Reminders", available: false },
   { href: "/notifications", label: "Notification history", available: false },
