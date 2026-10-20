@@ -33,15 +33,15 @@
 
 Por quê:
 
-| Necessidade | Como é resolvida | Complexidade |
-|---|---|---|
-| Autenticação | Supabase Auth (pronto, seguro, com e-mail/senha e magic link) | Baixa |
-| Banco de dados multiempresa | PostgreSQL do Supabase + Row Level Security (RLS) | Média |
-| Interface premium e responsiva | Next.js + Tailwind CSS + shadcn/ui (componentes prontos e acessíveis) | Média |
-| Envio de e-mail | Resend (API simples, templates em React) | Baixa |
-| Tarefas agendadas sem servidor | `pg_cron` do Supabase chamando uma rota protegida a cada minuto | Média |
-| Pagamentos recorrentes | Stripe Checkout + Customer Portal + Webhooks | Média |
-| Hospedagem | Vercel (deploy automático a cada `git push`) | Baixa |
+| Necessidade                    | Como é resolvida                                                      | Complexidade |
+| ------------------------------ | --------------------------------------------------------------------- | ------------ |
+| Autenticação                   | Supabase Auth (pronto, seguro, com e-mail/senha e magic link)         | Baixa        |
+| Banco de dados multiempresa    | PostgreSQL do Supabase + Row Level Security (RLS)                     | Média        |
+| Interface premium e responsiva | Next.js + Tailwind CSS + shadcn/ui (componentes prontos e acessíveis) | Média        |
+| Envio de e-mail                | Resend (API simples, templates em React)                              | Baixa        |
+| Tarefas agendadas sem servidor | `pg_cron` do Supabase chamando uma rota protegida a cada minuto       | Média        |
+| Pagamentos recorrentes         | Stripe Checkout + Customer Portal + Webhooks                          | Média        |
+| Hospedagem                     | Vercel (deploy automático a cada `git push`)                          | Baixa        |
 
 A parte **realmente difícil** não é a interface — é a **confiabilidade dos lembretes** (fusos horários, reenvio, duplicidade) e a **conformidade legal**. Por isso essas partes recebem atenção especial neste plano.
 
@@ -51,18 +51,18 @@ Nenhum servidor precisará ser administrado: todos os serviços são gerenciados
 
 ## 2. Principais riscos
 
-| # | Risco | Impacto | Mitigação |
-|---|---|---|---|
-| 1 | **Vazamento de dados entre empresas** (empresa A vê clientes da empresa B) | Crítico | RLS em **todas** as tabelas; testes automatizados que tentam acessar dados de outra empresa; chave `service_role` usada apenas em rotas de servidor específicas. |
-| 2 | **Lembretes duplicados, atrasados ou não enviados** | Alto (é o produto) | Fila no banco com estados, travas (`FOR UPDATE SKIP LOCKED`), chave de idempotência única por lembrete, reenvio com backoff, recuperação de travas "presas". |
-| 3 | **Erros de fuso horário / horário de verão** | Alto | Armazenar tudo em UTC (`timestamptz`); fuso IANA por empresa (ex.: `America/Chicago`); conversão apenas na exibição; testes específicos para as datas de mudança de horário. |
-| 4 | **Conformidade legal nos EUA** (CAN-SPAM, TCPA para SMS, leis estaduais, privacidade) | Alto (multas de US$ 500–1.500 por SMS indevido no TCPA) | Consentimento registrado por cliente; link de descadastro em todo e-mail; SMS só depois, com opt-in explícito e tratamento de "STOP"; Termos de Uso e Política de Privacidade. |
-| 5 | **Entregabilidade de e-mail** (lembretes caindo no spam) | Alto | Domínio próprio com SPF, DKIM e DMARC; conteúdo estritamente transacional; tratamento de bounces e reclamações via webhook. |
-| 6 | **Empresa jurídica e recebimento de pagamentos** (você reside fora dos EUA?) | Alto | Definir antes da Fase 7: conta Stripe no Brasil vs. LLC americana (Stripe Atlas) vs. "Merchant of Record". Consultar um contador sobre impostos e *sales tax* americano. |
-| 7 | **Dados de saúde (HIPAA)** — clínicas podem colocar informações médicas nos lembretes | Alto | No MVP, **proibir nos Termos de Uso** o uso por entidades cobertas pela HIPAA e evitar campos de texto livre nos templates de saúde. Não focar em clínicas inicialmente. |
-| 8 | **Concorrência** (Calendly, Square Appointments, Setmore, Acuity têm lembretes) | Médio | Focar em um nicho (ex.: barbearias, serviços domésticos, personal trainers) e na simplicidade. Validar com 10 conversas com potenciais clientes antes do lançamento. |
-| 9 | **Tempo limitado (1h/dia) e aumento de escopo** | Médio | MVP rigoroso; cada sessão de 1h termina com algo testado e salvo no Git. |
-| 10 | **Manutenção em produção por um iniciante** | Médio | Testes automatizados, CI no GitHub, monitoramento de erros (Sentry), backups diários (Supabase Pro), ambientes separados de desenvolvimento e produção. |
+| #   | Risco                                                                                 | Impacto                                                 | Mitigação                                                                                                                                                                      |
+| --- | ------------------------------------------------------------------------------------- | ------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| 1   | **Vazamento de dados entre empresas** (empresa A vê clientes da empresa B)            | Crítico                                                 | RLS em **todas** as tabelas; testes automatizados que tentam acessar dados de outra empresa; chave `service_role` usada apenas em rotas de servidor específicas.               |
+| 2   | **Lembretes duplicados, atrasados ou não enviados**                                   | Alto (é o produto)                                      | Fila no banco com estados, travas (`FOR UPDATE SKIP LOCKED`), chave de idempotência única por lembrete, reenvio com backoff, recuperação de travas "presas".                   |
+| 3   | **Erros de fuso horário / horário de verão**                                          | Alto                                                    | Armazenar tudo em UTC (`timestamptz`); fuso IANA por empresa (ex.: `America/Chicago`); conversão apenas na exibição; testes específicos para as datas de mudança de horário.   |
+| 4   | **Conformidade legal nos EUA** (CAN-SPAM, TCPA para SMS, leis estaduais, privacidade) | Alto (multas de US$ 500–1.500 por SMS indevido no TCPA) | Consentimento registrado por cliente; link de descadastro em todo e-mail; SMS só depois, com opt-in explícito e tratamento de "STOP"; Termos de Uso e Política de Privacidade. |
+| 5   | **Entregabilidade de e-mail** (lembretes caindo no spam)                              | Alto                                                    | Domínio próprio com SPF, DKIM e DMARC; conteúdo estritamente transacional; tratamento de bounces e reclamações via webhook.                                                    |
+| 6   | **Empresa jurídica e recebimento de pagamentos** (você reside fora dos EUA?)          | Alto                                                    | Definir antes da Fase 7: conta Stripe no Brasil vs. LLC americana (Stripe Atlas) vs. "Merchant of Record". Consultar um contador sobre impostos e _sales tax_ americano.       |
+| 7   | **Dados de saúde (HIPAA)** — clínicas podem colocar informações médicas nos lembretes | Alto                                                    | No MVP, **proibir nos Termos de Uso** o uso por entidades cobertas pela HIPAA e evitar campos de texto livre nos templates de saúde. Não focar em clínicas inicialmente.       |
+| 8   | **Concorrência** (Calendly, Square Appointments, Setmore, Acuity têm lembretes)       | Médio                                                   | Focar em um nicho (ex.: barbearias, serviços domésticos, personal trainers) e na simplicidade. Validar com 10 conversas com potenciais clientes antes do lançamento.           |
+| 9   | **Tempo limitado (1h/dia) e aumento de escopo**                                       | Médio                                                   | MVP rigoroso; cada sessão de 1h termina com algo testado e salvo no Git.                                                                                                       |
+| 10  | **Manutenção em produção por um iniciante**                                           | Médio                                                   | Testes automatizados, CI no GitHub, monitoramento de erros (Sentry), backups diários (Supabase Pro), ambientes separados de desenvolvimento e produção.                        |
 
 ---
 
@@ -70,22 +70,22 @@ Nenhum servidor precisará ser administrado: todos os serviços são gerenciados
 
 ### 3.1 Stack escolhida
 
-| Camada | Tecnologia | Justificativa |
-|---|---|---|
-| Aplicação | **Next.js (App Router) + TypeScript (strict)** | Front-end e back-end no mesmo projeto; Server Actions e Route Handlers eliminam um servidor separado. |
-| Estilo | **Tailwind CSS v4 + shadcn/ui** | Componentes prontos, acessíveis e com aparência profissional; o código fica no nosso projeto (sem dependência "caixa-preta"). |
-| Validação | **Zod** | Mesmo schema valida formulários no navegador e no servidor. |
-| Auth + Banco | **Supabase** (Auth, PostgreSQL, RLS, `pg_cron`, `pg_net`, Vault) | Um único serviço cobre login, banco, segurança por linha e agendador. |
-| E-mail | **Resend + React Email** | API simples, suporte a chave de idempotência, webhooks de entrega/bounce. |
-| Pagamentos | **Stripe Billing** (Checkout, Customer Portal, Webhooks) | Upgrades, downgrades, cancelamento e cobrança de cartão já prontos no portal do Stripe. |
-| Hospedagem | **Vercel** | Deploy automático pelo GitHub; ambiente de *preview* para cada branch. |
-| Agendador | **Supabase `pg_cron` → rota `/api/cron/dispatch` a cada minuto** | Gratuito, roda no servidor do banco, não depende de navegador aberto. Alternativa: Vercel Cron (exige plano Pro, que usaremos em produção de qualquer forma). |
-| Calendário | **FullCalendar** (ou componente próprio de semana/mês) | Visualizações de dia/semana/mês prontas e responsivas. |
-| Datas | **date-fns + date-fns-tz** | Conversão confiável entre UTC e fuso da empresa. |
-| Monitoramento | **Sentry** (plano gratuito) + logs estruturados | Saber quando algo quebra antes do cliente reclamar. |
-| Testes | **Vitest** (unitários/integração) + **Playwright** (ponta a ponta) | Padrão de mercado, rodam no Windows e no GitHub Actions. |
-| CI | **GitHub Actions** | Lint, typecheck e testes a cada push. |
-| SMS (futuro) | **Twilio** (com registro 10DLC) | Somente após validar o produto com e-mail. |
+| Camada        | Tecnologia                                                         | Justificativa                                                                                                                                                 |
+| ------------- | ------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Aplicação     | **Next.js (App Router) + TypeScript (strict)**                     | Front-end e back-end no mesmo projeto; Server Actions e Route Handlers eliminam um servidor separado.                                                         |
+| Estilo        | **Tailwind CSS v4 + shadcn/ui**                                    | Componentes prontos, acessíveis e com aparência profissional; o código fica no nosso projeto (sem dependência "caixa-preta").                                 |
+| Validação     | **Zod**                                                            | Mesmo schema valida formulários no navegador e no servidor.                                                                                                   |
+| Auth + Banco  | **Supabase** (Auth, PostgreSQL, RLS, `pg_cron`, `pg_net`, Vault)   | Um único serviço cobre login, banco, segurança por linha e agendador.                                                                                         |
+| E-mail        | **Resend + React Email**                                           | API simples, suporte a chave de idempotência, webhooks de entrega/bounce.                                                                                     |
+| Pagamentos    | **Stripe Billing** (Checkout, Customer Portal, Webhooks)           | Upgrades, downgrades, cancelamento e cobrança de cartão já prontos no portal do Stripe.                                                                       |
+| Hospedagem    | **Vercel**                                                         | Deploy automático pelo GitHub; ambiente de _preview_ para cada branch.                                                                                        |
+| Agendador     | **Supabase `pg_cron` → rota `/api/cron/dispatch` a cada minuto**   | Gratuito, roda no servidor do banco, não depende de navegador aberto. Alternativa: Vercel Cron (exige plano Pro, que usaremos em produção de qualquer forma). |
+| Calendário    | **FullCalendar** (ou componente próprio de semana/mês)             | Visualizações de dia/semana/mês prontas e responsivas.                                                                                                        |
+| Datas         | **date-fns + date-fns-tz**                                         | Conversão confiável entre UTC e fuso da empresa.                                                                                                              |
+| Monitoramento | **Sentry** (plano gratuito) + logs estruturados                    | Saber quando algo quebra antes do cliente reclamar.                                                                                                           |
+| Testes        | **Vitest** (unitários/integração) + **Playwright** (ponta a ponta) | Padrão de mercado, rodam no Windows e no GitHub Actions.                                                                                                      |
+| CI            | **GitHub Actions**                                                 | Lint, typecheck e testes a cada push.                                                                                                                         |
+| SMS (futuro)  | **Twilio** (com registro 10DLC)                                    | Somente após validar o produto com e-mail.                                                                                                                    |
 
 **Por que não rodar o Supabase localmente?** Isso exige Docker, que é pesado e problemático no Windows para iniciantes. Usaremos **dois projetos Supabase na nuvem** (`dev` e `prod`) e versionaremos o banco com **migrações SQL** aplicadas via Supabase CLI (`npx supabase db push`), que não precisa de Docker.
 
@@ -121,35 +121,35 @@ flowchart LR
 
 ### 4.1 Durante o desenvolvimento (Fases 2–8)
 
-| Serviço | Plano | Custo |
-|---|---|---|
-| Vercel | Hobby | US$ 0 |
-| Supabase | Free (2 projetos) | US$ 0 |
-| Resend | Free (3.000 e-mails/mês, 100/dia) | US$ 0 |
-| Stripe | Modo de teste | US$ 0 |
-| GitHub, Sentry | Free | US$ 0 |
-| Domínio (.com) | — | ~US$ 1/mês (~US$ 12/ano) |
-| **Total** | | **~US$ 1/mês** |
+| Serviço        | Plano                             | Custo                    |
+| -------------- | --------------------------------- | ------------------------ |
+| Vercel         | Hobby                             | US$ 0                    |
+| Supabase       | Free (2 projetos)                 | US$ 0                    |
+| Resend         | Free (3.000 e-mails/mês, 100/dia) | US$ 0                    |
+| Stripe         | Modo de teste                     | US$ 0                    |
+| GitHub, Sentry | Free                              | US$ 0                    |
+| Domínio (.com) | —                                 | ~US$ 1/mês (~US$ 12/ano) |
+| **Total**      |                                   | **~US$ 1/mês**           |
 
 ### 4.2 Em produção, com os primeiros clientes
 
-| Serviço | Plano | Custo | Observação |
-|---|---|---|---|
-| Vercel | Pro | US$ 20 | O plano Hobby **não permite uso comercial**. |
-| Supabase | Pro | US$ 25 | O Free pausa após inatividade e não tem backups diários — inaceitável em produção. |
-| Resend | Free → Pro | US$ 0 → 20 | Pro (~50 mil e-mails/mês) quando passar de 3.000/mês. |
-| Domínio | — | ~US$ 1 | |
-| Sentry | Free | US$ 0 | |
-| **Fixo** | | **~US$ 46–66/mês** | |
-| Stripe | Por transação | ~2,9% + US$ 0,30 por cobrança + ~0,7% Billing | Stripe Tax (opcional) +0,5%. |
+| Serviço  | Plano         | Custo                                         | Observação                                                                         |
+| -------- | ------------- | --------------------------------------------- | ---------------------------------------------------------------------------------- |
+| Vercel   | Pro           | US$ 20                                        | O plano Hobby **não permite uso comercial**.                                       |
+| Supabase | Pro           | US$ 25                                        | O Free pausa após inatividade e não tem backups diários — inaceitável em produção. |
+| Resend   | Free → Pro    | US$ 0 → 20                                    | Pro (~50 mil e-mails/mês) quando passar de 3.000/mês.                              |
+| Domínio  | —             | ~US$ 1                                        |                                                                                    |
+| Sentry   | Free          | US$ 0                                         |                                                                                    |
+| **Fixo** |               | **~US$ 46–66/mês**                            |                                                                                    |
+| Stripe   | Por transação | ~2,9% + US$ 0,30 por cobrança + ~0,7% Billing | Stripe Tax (opcional) +0,5%.                                                       |
 
 **Ponto de equilíbrio:** cerca de **3–4 assinantes** do plano Basic cobrem a infraestrutura fixa.
 
 ### 4.3 Custo variável por mensagem (para definir limites)
 
-| Canal | Custo aproximado | Observação |
-|---|---|---|
-| E-mail (Resend Pro) | ~US$ 0,0004 por e-mail | Praticamente irrelevante. |
+| Canal                    | Custo aproximado                                   | Observação                                                                                 |
+| ------------------------ | -------------------------------------------------- | ------------------------------------------------------------------------------------------ |
+| E-mail (Resend Pro)      | ~US$ 0,0004 por e-mail                             | Praticamente irrelevante.                                                                  |
 | SMS EUA (Twilio, futuro) | ~US$ 0,01–0,015 por SMS (com taxas das operadoras) | Mais registro 10DLC (taxa inicial + mensalidade de campanha). É o custo que exige limites. |
 
 ---
@@ -158,17 +158,17 @@ flowchart LR
 
 > Hipóteses comerciais — validar com clientes reais antes do lançamento.
 
-| Recurso | **Basic — US$ 19/mês** | **Pro — US$ 49/mês** | **Business — US$ 99/mês** |
-|---|---|---|---|
-| Usuários (equipe) | 1 | 5 | 15 |
-| Clientes ativos | 500 | 3.000 | 15.000 |
-| Lembretes por e-mail/mês | 1.000 | 5.000 | 20.000 |
-| Regras de lembrete por agendamento | 1 (ex.: 24h antes) | até 3 | até 5 |
-| Templates personalizados | Padrão + logo | Personalizáveis | Personalizáveis |
-| Histórico de notificações | 30 dias | 12 meses | 24 meses |
-| SMS (fase futura) | — | 250/mês | 1.000/mês |
-| Importação CSV de clientes | — | ✓ | ✓ |
-| Suporte | E-mail | E-mail prioritário | Prioritário |
+| Recurso                            | **Basic — US$ 19/mês** | **Pro — US$ 49/mês** | **Business — US$ 99/mês** |
+| ---------------------------------- | ---------------------- | -------------------- | ------------------------- |
+| Usuários (equipe)                  | 1                      | 5                    | 15                        |
+| Clientes ativos                    | 500                    | 3.000                | 15.000                    |
+| Lembretes por e-mail/mês           | 1.000                  | 5.000                | 20.000                    |
+| Regras de lembrete por agendamento | 1 (ex.: 24h antes)     | até 3                | até 5                     |
+| Templates personalizados           | Padrão + logo          | Personalizáveis      | Personalizáveis           |
+| Histórico de notificações          | 30 dias                | 12 meses             | 24 meses                  |
+| SMS (fase futura)                  | —                      | 250/mês              | 1.000/mês                 |
+| Importação CSV de clientes         | —                      | ✓                    | ✓                         |
+| Suporte                            | E-mail                 | E-mail prioritário   | Prioritário               |
 
 - **Teste grátis de 14 dias** (sem cartão no MVP, para reduzir atrito; reavaliar depois).
 - Desconto anual (ex.: 2 meses grátis) pode ser adicionado sem mudar o código, criando outro `price` no Stripe.
@@ -277,7 +277,7 @@ reminder-app/
 - Chaves primárias `uuid` (`gen_random_uuid()`).
 - Datas/horas sempre `timestamptz` (armazenadas em UTC).
 - `created_at` / `updated_at` em todas as tabelas.
-- *Soft delete* (`deleted_at`) em clientes e agendamentos, para preservar o histórico.
+- _Soft delete_ (`deleted_at`) em clientes e agendamentos, para preservar o histórico.
 - E-mails normalizados em minúsculas; telefones em formato **E.164** (`+15551234567`).
 - Valores de status como `enum` do PostgreSQL ou `check constraint`.
 
@@ -305,108 +305,108 @@ erDiagram
 
 **`businesses`** — a empresa (o "tenant")
 
-| Coluna | Tipo | Notas |
-|---|---|---|
-| id | uuid PK | |
-| name | text | obrigatório |
-| slug | text unique | |
-| timezone | text | IANA, ex.: `America/New_York`; validado |
-| contact_email | text | reply-to dos lembretes |
-| phone | text null | |
-| postal_address | text | **obrigatório pelo CAN-SPAM** no rodapé dos e-mails |
-| logo_url | text null | |
-| created_at, updated_at | timestamptz | |
+| Coluna                 | Tipo        | Notas                                               |
+| ---------------------- | ----------- | --------------------------------------------------- |
+| id                     | uuid PK     |                                                     |
+| name                   | text        | obrigatório                                         |
+| slug                   | text unique |                                                     |
+| timezone               | text        | IANA, ex.: `America/New_York`; validado             |
+| contact_email          | text        | reply-to dos lembretes                              |
+| phone                  | text null   |                                                     |
+| postal_address         | text        | **obrigatório pelo CAN-SPAM** no rodapé dos e-mails |
+| logo_url               | text null   |                                                     |
+| created_at, updated_at | timestamptz |                                                     |
 
 **`business_members`** — quem acessa cada empresa
 
-| Coluna | Tipo | Notas |
-|---|---|---|
-| business_id | uuid FK | PK composta |
-| user_id | uuid FK → auth.users | PK composta |
-| role | enum `owner`, `admin`, `staff` | |
-| created_at | timestamptz | |
+| Coluna      | Tipo                           | Notas       |
+| ----------- | ------------------------------ | ----------- |
+| business_id | uuid FK                        | PK composta |
+| user_id     | uuid FK → auth.users           | PK composta |
+| role        | enum `owner`, `admin`, `staff` |             |
+| created_at  | timestamptz                    |             |
 
 **`profiles`** — dados do usuário: `user_id` (PK, FK auth.users), `full_name`, `created_at`.
 
 **`clients`** — clientes da empresa
 
-| Coluna | Tipo | Notas |
-|---|---|---|
-| id | uuid PK | |
-| business_id | uuid FK | índice |
-| first_name, last_name | text | |
-| email | citext null | único por empresa (quando não nulo) |
-| phone_e164 | text null | |
-| email_reminders_consent | boolean | padrão `false` |
-| sms_reminders_consent | boolean | padrão `false` (fase futura) |
-| notes | text null | aviso na UI: não inserir dados de saúde |
-| deleted_at | timestamptz null | |
-| created_at, updated_at | timestamptz | |
+| Coluna                  | Tipo             | Notas                                   |
+| ----------------------- | ---------------- | --------------------------------------- |
+| id                      | uuid PK          |                                         |
+| business_id             | uuid FK          | índice                                  |
+| first_name, last_name   | text             |                                         |
+| email                   | citext null      | único por empresa (quando não nulo)     |
+| phone_e164              | text null        |                                         |
+| email_reminders_consent | boolean          | padrão `false`                          |
+| sms_reminders_consent   | boolean          | padrão `false` (fase futura)            |
+| notes                   | text null        | aviso na UI: não inserir dados de saúde |
+| deleted_at              | timestamptz null |                                         |
+| created_at, updated_at  | timestamptz      |                                         |
 
 **`consent_events`** — trilha de auditoria de consentimento (prova legal)
 
-| Coluna | Tipo | Notas |
-|---|---|---|
-| id | uuid PK | |
-| business_id, client_id | uuid FK | |
-| channel | enum `email`, `sms` | |
-| action | enum `granted`, `revoked` | |
-| source | enum `staff_entry`, `import`, `unsubscribe_link`, `sms_stop`, `booking_form` | |
-| recorded_by | uuid null | usuário que registrou |
-| ip_address, user_agent | text null | quando vier do cliente final |
-| created_at | timestamptz | |
+| Coluna                 | Tipo                                                                         | Notas                        |
+| ---------------------- | ---------------------------------------------------------------------------- | ---------------------------- |
+| id                     | uuid PK                                                                      |                              |
+| business_id, client_id | uuid FK                                                                      |                              |
+| channel                | enum `email`, `sms`                                                          |                              |
+| action                 | enum `granted`, `revoked`                                                    |                              |
+| source                 | enum `staff_entry`, `import`, `unsubscribe_link`, `sms_stop`, `booking_form` |                              |
+| recorded_by            | uuid null                                                                    | usuário que registrou        |
+| ip_address, user_agent | text null                                                                    | quando vier do cliente final |
+| created_at             | timestamptz                                                                  |                              |
 
 **`appointments`** — agendamentos
 
-| Coluna | Tipo | Notas |
-|---|---|---|
-| id | uuid PK | |
-| business_id | uuid FK | |
-| client_id | uuid FK | |
-| title | text | ex.: "Haircut" |
-| starts_at, ends_at | timestamptz | `check (ends_at > starts_at)` |
-| location | text null | |
-| notes | text null | |
-| status | enum `scheduled`, `cancelled`, `completed`, `no_show` | |
-| created_by | uuid | |
-| deleted_at | timestamptz null | |
-| created_at, updated_at | timestamptz | índice `(business_id, starts_at)` |
+| Coluna                 | Tipo                                                  | Notas                             |
+| ---------------------- | ----------------------------------------------------- | --------------------------------- |
+| id                     | uuid PK                                               |                                   |
+| business_id            | uuid FK                                               |                                   |
+| client_id              | uuid FK                                               |                                   |
+| title                  | text                                                  | ex.: "Haircut"                    |
+| starts_at, ends_at     | timestamptz                                           | `check (ends_at > starts_at)`     |
+| location               | text null                                             |                                   |
+| notes                  | text null                                             |                                   |
+| status                 | enum `scheduled`, `cancelled`, `completed`, `no_show` |                                   |
+| created_by             | uuid                                                  |                                   |
+| deleted_at             | timestamptz null                                      |                                   |
+| created_at, updated_at | timestamptz                                           | índice `(business_id, starts_at)` |
 
 **`reminder_rules`** — "enviar X minutos antes"
 
-| Coluna | Tipo | Notas |
-|---|---|---|
-| id | uuid PK | |
-| business_id | uuid FK | |
-| channel | enum `email`, `sms` | |
-| offset_minutes | integer | ex.: 1440 = 24h; `check` entre 15 min e 14 dias |
-| template_id | uuid FK null | null = template padrão |
-| is_active | boolean | |
-| created_at, updated_at | timestamptz | |
+| Coluna                 | Tipo                | Notas                                           |
+| ---------------------- | ------------------- | ----------------------------------------------- |
+| id                     | uuid PK             |                                                 |
+| business_id            | uuid FK             |                                                 |
+| channel                | enum `email`, `sms` |                                                 |
+| offset_minutes         | integer             | ex.: 1440 = 24h; `check` entre 15 min e 14 dias |
+| template_id            | uuid FK null        | null = template padrão                          |
+| is_active              | boolean             |                                                 |
+| created_at, updated_at | timestamptz         |                                                 |
 
 **`message_templates`** — `id`, `business_id`, `channel`, `name`, `subject`, `body` (com variáveis permitidas: `{{client_first_name}}`, `{{appointment_date}}`, `{{appointment_time}}`, `{{business_name}}`, `{{location}}`), timestamps.
 
 **`reminder_jobs`** — a fila de envio (coração da automação)
 
-| Coluna | Tipo | Notas |
-|---|---|---|
-| id | uuid PK | também usado como **Idempotency-Key** no Resend |
-| business_id | uuid FK | |
-| appointment_id | uuid FK | |
-| rule_id | uuid FK | |
-| channel | enum | |
-| send_at | timestamptz | `appointment.starts_at - offset` |
-| status | enum `pending`, `processing`, `sent`, `failed`, `cancelled`, `skipped` | |
-| attempts | integer | padrão 0 |
-| next_attempt_at | timestamptz | para reenvio com backoff |
-| locked_at | timestamptz null | detectar travas presas |
-| skip_reason | text null | `no_consent`, `unsubscribed`, `quota_exceeded`, `subscription_inactive`, `appointment_passed` |
-| last_error | text null | |
-| provider_message_id | text null | id retornado pelo Resend |
-| sent_at | timestamptz null | |
-| created_at, updated_at | timestamptz | |
-| **unique** | `(appointment_id, rule_id)` | impede lembrete duplicado no nível do banco |
-| índice | `(status, next_attempt_at)` parcial onde `status in ('pending','failed')` | busca rápida do dispatcher |
+| Coluna                 | Tipo                                                                      | Notas                                                                                         |
+| ---------------------- | ------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
+| id                     | uuid PK                                                                   | também usado como **Idempotency-Key** no Resend                                               |
+| business_id            | uuid FK                                                                   |                                                                                               |
+| appointment_id         | uuid FK                                                                   |                                                                                               |
+| rule_id                | uuid FK                                                                   |                                                                                               |
+| channel                | enum                                                                      |                                                                                               |
+| send_at                | timestamptz                                                               | `appointment.starts_at - offset`                                                              |
+| status                 | enum `pending`, `processing`, `sent`, `failed`, `cancelled`, `skipped`    |                                                                                               |
+| attempts               | integer                                                                   | padrão 0                                                                                      |
+| next_attempt_at        | timestamptz                                                               | para reenvio com backoff                                                                      |
+| locked_at              | timestamptz null                                                          | detectar travas presas                                                                        |
+| skip_reason            | text null                                                                 | `no_consent`, `unsubscribed`, `quota_exceeded`, `subscription_inactive`, `appointment_passed` |
+| last_error             | text null                                                                 |                                                                                               |
+| provider_message_id    | text null                                                                 | id retornado pelo Resend                                                                      |
+| sent_at                | timestamptz null                                                          |                                                                                               |
+| created_at, updated_at | timestamptz                                                               |                                                                                               |
+| **unique**             | `(appointment_id, rule_id)`                                               | impede lembrete duplicado no nível do banco                                                   |
+| índice                 | `(status, next_attempt_at)` parcial onde `status in ('pending','failed')` | busca rápida do dispatcher                                                                    |
 
 **`notification_events`** — histórico exibido na página 7: `id`, `business_id`, `job_id`, `event` (`queued`, `sent`, `delivered`, `bounced`, `complained`, `failed`, `skipped`), `detail` (jsonb), `created_at`.
 
@@ -414,17 +414,17 @@ erDiagram
 
 **`subscriptions`** — espelho do Stripe (escrito **somente** pelo webhook)
 
-| Coluna | Tipo | Notas |
-|---|---|---|
-| business_id | uuid PK FK | |
-| stripe_customer_id | text unique | |
-| stripe_subscription_id | text unique null | |
-| plan | enum `trial`, `basic`, `pro`, `business` | |
-| status | text | `trialing`, `active`, `past_due`, `canceled`, `unpaid`... |
-| trial_ends_at | timestamptz null | |
-| current_period_end | timestamptz null | |
-| cancel_at_period_end | boolean | |
-| updated_at | timestamptz | |
+| Coluna                 | Tipo                                     | Notas                                                     |
+| ---------------------- | ---------------------------------------- | --------------------------------------------------------- |
+| business_id            | uuid PK FK                               |                                                           |
+| stripe_customer_id     | text unique                              |                                                           |
+| stripe_subscription_id | text unique null                         |                                                           |
+| plan                   | enum `trial`, `basic`, `pro`, `business` |                                                           |
+| status                 | text                                     | `trialing`, `active`, `past_due`, `canceled`, `unpaid`... |
+| trial_ends_at          | timestamptz null                         |                                                           |
+| current_period_end     | timestamptz null                         |                                                           |
+| cancel_at_period_end   | boolean                                  |                                                           |
+| updated_at             | timestamptz                              |                                                           |
 
 **`stripe_events`** — idempotência dos webhooks: `id` (= id do evento Stripe, PK), `type`, `processed_at`. Se o Stripe reenviar o mesmo evento, ele é ignorado.
 
@@ -432,15 +432,15 @@ erDiagram
 
 ### 7.4 Regras de RLS (resumo)
 
-| Tabela | Usuário autenticado (membro da empresa) | service_role (cron/webhooks) |
-|---|---|---|
-| businesses | SELECT/UPDATE da própria empresa; INSERT via função `create_business()` | total |
-| business_members | SELECT dos membros da própria empresa | total |
-| clients, appointments, reminder_rules, message_templates | SELECT/INSERT/UPDATE/DELETE onde `is_business_member(business_id)` | total |
-| consent_events | SELECT/INSERT (sem UPDATE/DELETE — trilha imutável) | total |
-| reminder_jobs, notification_events, usage_counters | **somente SELECT** | escrita |
-| subscriptions | **somente SELECT** | escrita (webhook) |
-| stripe_events, suppressions (globais) | sem acesso | total |
+| Tabela                                                   | Usuário autenticado (membro da empresa)                                 | service_role (cron/webhooks) |
+| -------------------------------------------------------- | ----------------------------------------------------------------------- | ---------------------------- |
+| businesses                                               | SELECT/UPDATE da própria empresa; INSERT via função `create_business()` | total                        |
+| business_members                                         | SELECT dos membros da própria empresa                                   | total                        |
+| clients, appointments, reminder_rules, message_templates | SELECT/INSERT/UPDATE/DELETE onde `is_business_member(business_id)`      | total                        |
+| consent_events                                           | SELECT/INSERT (sem UPDATE/DELETE — trilha imutável)                     | total                        |
+| reminder_jobs, notification_events, usage_counters       | **somente SELECT**                                                      | escrita                      |
+| subscriptions                                            | **somente SELECT**                                                      | escrita (webhook)            |
+| stripe_events, suppressions (globais)                    | sem acesso                                                              | total                        |
 
 Além disso: `INSERT/UPDATE` validam que `client_id` e `appointment_id` pertencem à **mesma** `business_id` (impede referência cruzada entre empresas).
 
@@ -450,14 +450,14 @@ Além disso: `INSERT/UPDATE` validam que `client_id` e `appointment_id` pertence
 
 ### 8.1 Fluxo
 
-1. **Criação/alteração do agendamento** → um *trigger* no PostgreSQL cria (ou recalcula) um `reminder_job` para cada regra ativa da empresa. Se o agendamento for cancelado ou excluído, os jobs pendentes viram `cancelled`. Se for remarcado, o `send_at` é recalculado.
+1. **Criação/alteração do agendamento** → um _trigger_ no PostgreSQL cria (ou recalcula) um `reminder_job` para cada regra ativa da empresa. Se o agendamento for cancelado ou excluído, os jobs pendentes viram `cancelled`. Se for remarcado, o `send_at` é recalculado.
 2. **A cada minuto**, o `pg_cron` faz uma chamada HTTP (`pg_net`) para `https://<app>/api/cron/dispatch` com o cabeçalho `Authorization: Bearer <CRON_SECRET>` (segredo guardado no Supabase Vault).
 3. A rota chama a função SQL `claim_due_reminder_jobs(limit 50)`, que usa `FOR UPDATE SKIP LOCKED` para pegar jobs com `send_at <= now()` e marcá-los como `processing`. Duas execuções simultâneas **nunca** pegam o mesmo job.
 4. Para cada job, antes de enviar, o sistema verifica:
    - agendamento ainda `scheduled` e ainda no futuro;
    - cliente com consentimento e não está em `suppressions`;
    - assinatura ativa (ou em trial) e cota mensal disponível.
-   Se alguma falhar → `skipped` com o motivo (aparece no histórico).
+     Se alguma falhar → `skipped` com o motivo (aparece no histórico).
 5. Envia pelo Resend com **`Idempotency-Key = job.id`** — mesmo se a rota for executada duas vezes, o Resend não envia duas vezes.
 6. Sucesso → `sent`, grava `provider_message_id`, incrementa `usage_counters`.
    Falha temporária → `failed` com `next_attempt_at` em 1 min, 5 min, 30 min, 2 h (máx. 5 tentativas).
@@ -493,15 +493,15 @@ Além disso: `INSERT/UPDATE` validam que `client_id` e `appointment_id` pertence
 
 ### 9.2 Legislação e boas práticas nos EUA
 
-| Tema | O que fazer |
-|---|---|
-| **CAN-SPAM Act** (e-mail) | Lembretes de agendamento são mensagens "transacionais/de relacionamento", mas mesmo assim: remetente verdadeiro, endereço físico da empresa no rodapé, link de descadastro funcional, **nenhum conteúdo promocional** nos lembretes. |
-| **Gmail/Yahoo — requisitos de remetente** | SPF, DKIM, DMARC no domínio de envio; cabeçalhos `List-Unsubscribe` e `List-Unsubscribe-Post` (one-click); taxa de spam baixa. |
-| **TCPA + 10DLC** (SMS, fase futura) | Consentimento expresso prévio registrado; "Reply STOP to opt out" em toda mensagem; processar STOP/HELP automaticamente; horários permitidos (8h–21h no fuso do destinatário); registro da marca e campanha 10DLC. Leis estaduais mais rígidas (ex.: Flórida, Oklahoma) reforçam a necessidade de consentimento. |
-| **Privacidade (CCPA/CPRA e leis estaduais)** | Política de Privacidade clara; não vender dados; permitir exportação e exclusão de dados da empresa e de clientes; sua empresa atua como **operadora** (processor) dos dados dos clientes finais — formalizar em um DPA simples nos Termos. |
-| **HIPAA** | Fora do escopo no MVP: proibir nos Termos o uso por entidades cobertas e o envio de informações de saúde. |
-| **Responsabilidade do consentimento** | Nos Termos: a empresa assinante declara ter obtido o consentimento de seus clientes. No sistema: o envio é **bloqueado** sem a marcação de consentimento. |
-| **Documentos legais** | Terms of Service, Privacy Policy, Acceptable Use Policy. Recomendo revisar com um advogado antes de cobrar os primeiros clientes. |
+| Tema                                         | O que fazer                                                                                                                                                                                                                                                                                                      |
+| -------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **CAN-SPAM Act** (e-mail)                    | Lembretes de agendamento são mensagens "transacionais/de relacionamento", mas mesmo assim: remetente verdadeiro, endereço físico da empresa no rodapé, link de descadastro funcional, **nenhum conteúdo promocional** nos lembretes.                                                                             |
+| **Gmail/Yahoo — requisitos de remetente**    | SPF, DKIM, DMARC no domínio de envio; cabeçalhos `List-Unsubscribe` e `List-Unsubscribe-Post` (one-click); taxa de spam baixa.                                                                                                                                                                                   |
+| **TCPA + 10DLC** (SMS, fase futura)          | Consentimento expresso prévio registrado; "Reply STOP to opt out" em toda mensagem; processar STOP/HELP automaticamente; horários permitidos (8h–21h no fuso do destinatário); registro da marca e campanha 10DLC. Leis estaduais mais rígidas (ex.: Flórida, Oklahoma) reforçam a necessidade de consentimento. |
+| **Privacidade (CCPA/CPRA e leis estaduais)** | Política de Privacidade clara; não vender dados; permitir exportação e exclusão de dados da empresa e de clientes; sua empresa atua como **operadora** (processor) dos dados dos clientes finais — formalizar em um DPA simples nos Termos.                                                                      |
+| **HIPAA**                                    | Fora do escopo no MVP: proibir nos Termos o uso por entidades cobertas e o envio de informações de saúde.                                                                                                                                                                                                        |
+| **Responsabilidade do consentimento**        | Nos Termos: a empresa assinante declara ter obtido o consentimento de seus clientes. No sistema: o envio é **bloqueado** sem a marcação de consentimento.                                                                                                                                                        |
+| **Documentos legais**                        | Terms of Service, Privacy Policy, Acceptable Use Policy. Recomendo revisar com um advogado antes de cobrar os primeiros clientes.                                                                                                                                                                                |
 
 > Não sou advogado; estas orientações são técnicas e servem para preparar o produto. A validação jurídica final deve ser feita por um profissional.
 
@@ -518,13 +518,13 @@ Além disso: `INSERT/UPDATE` validam que `client_id` e `appointment_id` pertence
 
 ## 10. Estratégia de testes
 
-| Tipo | Ferramenta | O que cobre |
-|---|---|---|
-| Unitários | Vitest | Conversão de fuso/DST, cálculo de `send_at`, backoff de reenvio, limites de plano, tokens de descadastro, renderização de templates. |
-| Integração | Vitest + projeto Supabase `dev` | **RLS** (usuário A não lê/escreve dados da empresa B), trigger de criação de jobs, função `claim_due_reminder_jobs` sem duplicidade, webhook do Stripe com assinatura válida/inválida. |
-| Ponta a ponta | Playwright | Cadastro → onboarding → cliente → agendamento → job criado; páginas responsivas em tamanho de celular. |
-| Manual guiado | Checklist por fase | Envio real de e-mail para seu endereço; pagamento com cartão de teste do Stripe (`4242 4242 4242 4242`). |
-| CI | GitHub Actions | `lint`, `typecheck`, testes unitários em todo push; integração em PRs. |
+| Tipo          | Ferramenta                      | O que cobre                                                                                                                                                                            |
+| ------------- | ------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Unitários     | Vitest                          | Conversão de fuso/DST, cálculo de `send_at`, backoff de reenvio, limites de plano, tokens de descadastro, renderização de templates.                                                   |
+| Integração    | Vitest + projeto Supabase `dev` | **RLS** (usuário A não lê/escreve dados da empresa B), trigger de criação de jobs, função `claim_due_reminder_jobs` sem duplicidade, webhook do Stripe com assinatura válida/inválida. |
+| Ponta a ponta | Playwright                      | Cadastro → onboarding → cliente → agendamento → job criado; páginas responsivas em tamanho de celular.                                                                                 |
+| Manual guiado | Checklist por fase              | Envio real de e-mail para seu endereço; pagamento com cartão de teste do Stripe (`4242 4242 4242 4242`).                                                                               |
+| CI            | GitHub Actions                  | `lint`, `typecheck`, testes unitários em todo push; integração em PRs.                                                                                                                 |
 
 Regra: **nenhuma funcionalidade é marcada como concluída sem que seu teste (automatizado ou checklist manual) tenha passado e o resultado tenha sido registrado.**
 
@@ -533,6 +533,7 @@ Regra: **nenhuma funcionalidade é marcada como concluída sem que seu teste (au
 ## 11. Escopo do MVP
 
 **Entra no MVP (v1.0):**
+
 - Cadastro/login, recuperação de senha, onboarding da empresa (nome, fuso, endereço).
 - CRUD de clientes com registro de consentimento.
 - CRUD de agendamentos + calendário (dia/semana/mês) + lista.
@@ -544,6 +545,7 @@ Regra: **nenhuma funcionalidade é marcada como concluída sem que seu teste (au
 - Landing page, preços, termos e privacidade.
 
 **Fica para depois (após validar):**
+
 - SMS (Twilio), página de agendamento online para o cliente final, confirmação/cancelamento pelo cliente via link, integração com Google Calendar, múltiplos profissionais/agenda por funcionário, importação CSV (Pro), relatórios avançados, app mobile.
 
 ---
@@ -552,23 +554,24 @@ Regra: **nenhuma funcionalidade é marcada como concluída sem que seu teste (au
 
 Estimativa considerando ~1h/dia, 6 dias por semana (~6h/semana), incluindo tempo de aprendizado.
 
-| Fase | Entregável | Horas | Semanas (acumulado) |
-|---|---|---|---|
-| 1. Arquitetura e planejamento | Este documento aprovado | 2 | 0,5 |
-| 2. Configuração do ambiente | Programas instalados, contas criadas, projeto Next.js publicado na Vercel ("hello world" no ar), CI básico | 6 | 1,5 |
-| 3. Autenticação e banco | Migrações SQL, RLS, cadastro/login/onboarding, testes de isolamento | 10 | 3 |
-| 4. Dashboard e clientes | Layout da área logada, dashboard inicial, CRUD de clientes com consentimento | 9 | 4,5 |
-| 5. Agendamentos | CRUD, calendário responsivo, tratamento de fuso | 10 | 6 |
-| 6. Lembretes por e-mail | Domínio no Resend, regras, templates, trigger, dispatcher, retry, histórico, descadastro, webhooks | 13 | 8 |
-| 7. Pagamentos Stripe | Planos, checkout, portal, webhooks, limites por plano | 9 | 9,5 |
-| 8. Segurança, testes e correções | Revisão de segurança, testes E2E, Sentry, cabeçalhos, rate limit | 8 | 11 |
-| 9. Publicação | Projeto Supabase de produção, Vercel Pro, domínio, Stripe em modo real, páginas legais | 4 | 11,5 |
-| 10. Primeiros clientes | Landing refinada, e-mail de suporte, onboarding guiado, lista de 30 potenciais clientes, primeiras demonstrações | 6 | 12,5 |
-| **Total** | | **~77 h** | **~13 semanas** |
+| Fase                             | Entregável                                                                                                       | Horas     | Semanas (acumulado) |
+| -------------------------------- | ---------------------------------------------------------------------------------------------------------------- | --------- | ------------------- |
+| 1. Arquitetura e planejamento    | Este documento aprovado                                                                                          | 2         | 0,5                 |
+| 2. Configuração do ambiente      | Programas instalados, contas criadas, projeto Next.js publicado na Vercel ("hello world" no ar), CI básico       | 6         | 1,5                 |
+| 3. Autenticação e banco          | Migrações SQL, RLS, cadastro/login/onboarding, testes de isolamento                                              | 10        | 3                   |
+| 4. Dashboard e clientes          | Layout da área logada, dashboard inicial, CRUD de clientes com consentimento                                     | 9         | 4,5                 |
+| 5. Agendamentos                  | CRUD, calendário responsivo, tratamento de fuso                                                                  | 10        | 6                   |
+| 6. Lembretes por e-mail          | Domínio no Resend, regras, templates, trigger, dispatcher, retry, histórico, descadastro, webhooks               | 13        | 8                   |
+| 7. Pagamentos Stripe             | Planos, checkout, portal, webhooks, limites por plano                                                            | 9         | 9,5                 |
+| 8. Segurança, testes e correções | Revisão de segurança, testes E2E, Sentry, cabeçalhos, rate limit                                                 | 8         | 11                  |
+| 9. Publicação                    | Projeto Supabase de produção, Vercel Pro, domínio, Stripe em modo real, páginas legais                           | 4         | 11,5                |
+| 10. Primeiros clientes           | Landing refinada, e-mail de suporte, onboarding guiado, lista de 30 potenciais clientes, primeiras demonstrações | 6         | 12,5                |
+| **Total**                        |                                                                                                                  | **~77 h** | **~13 semanas**     |
 
 Com uma margem realista de 25% para imprevistos e aprendizado: **3 a 4 meses** até os primeiros clientes pagantes.
 
 **Formato de cada sessão de 1 hora:**
+
 1. 5 min — revisar onde paramos (o último commit e o checklist da fase).
 2. 45 min — implementar uma tarefa pequena.
 3. 10 min — testar, fazer `git commit` e `git push`.
@@ -583,12 +586,12 @@ Com uma margem realista de 25% para imprevistos e aprendizado: **3 a 4 meses** a
 
 ### 13.1 Programas para instalar
 
-| Programa | Onde baixar | Observação |
-|---|---|---|
-| **Git for Windows** | https://git-scm.com/download/win | Aceite as opções padrão. Instala também o "Git Bash". |
-| **Node.js LTS** (versão 24.x) | https://nodejs.org | Escolha o instalador **LTS** (`.msi`). Aceite as opções padrão. |
-| **Visual Studio Code** | https://code.visualstudio.com | Marque "Add to PATH" e "Open with Code" durante a instalação. |
-| Extensões do VS Code | Aba Extensions (Ctrl+Shift+X) | ESLint, Prettier, Tailwind CSS IntelliSense, GitLens (opcional). |
+| Programa                      | Onde baixar                      | Observação                                                       |
+| ----------------------------- | -------------------------------- | ---------------------------------------------------------------- |
+| **Git for Windows**           | https://git-scm.com/download/win | Aceite as opções padrão. Instala também o "Git Bash".            |
+| **Node.js LTS** (versão 24.x) | https://nodejs.org               | Escolha o instalador **LTS** (`.msi`). Aceite as opções padrão.  |
+| **Visual Studio Code**        | https://code.visualstudio.com    | Marque "Add to PATH" e "Open with Code" durante a instalação.    |
+| Extensões do VS Code          | Aba Extensions (Ctrl+Shift+X)    | ESLint, Prettier, Tailwind CSS IntelliSense, GitLens (opcional). |
 
 ### 13.2 Verificar a instalação
 
