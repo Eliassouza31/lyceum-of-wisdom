@@ -9,6 +9,7 @@ permissions:
 
 jobs:
   check:
+    name: Lint, types, unit tests, build
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -23,3 +24,52 @@ jobs:
       - run: npm run typecheck
       - run: npm test
       - run: npm run build
+
+  database-and-e2e:
+    name: Database (RLS) and end-to-end tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+
+      - name: Start local Supabase
+        run: npm run db:start
+
+      - name: Lint database schema
+        run: npm run db:lint
+
+      - name: Check generated database types are up to date
+        run: |
+          npm run db:types
+          git diff --exit-code src/types/database.types.ts
+
+      - name: Export local Supabase keys
+        run: |
+          npx supabase status -o env \
+            --override-name api.url=SUPABASE_TEST_URL \
+            --override-name auth.publishable_key=SUPABASE_TEST_PUBLISHABLE_KEY \
+            --override-name auth.secret_key=SUPABASE_TEST_SECRET_KEY \
+            | grep -E '^SUPABASE_TEST_' | sed 's/"//g' >> "$GITHUB_ENV"
+
+      - name: Integration tests (Row Level Security)
+        run: npm run test:integration
+
+      - name: Install Playwright browser
+        run: npx playwright install --with-deps chromium
+
+      - name: End-to-end tests
+        run: npm run test:e2e
+
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report
+          path: |
+            playwright-report
+            test-results
+          retention-days: 7

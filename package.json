@@ -12,15 +12,26 @@
     "test:watch": "vitest",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "check": "npm run format:check && npm run lint && npm run typecheck && npm run test"
+    "check": "npm run format:check && npm run lint && npm run typecheck && npm run test",
+    "db:start": "supabase start -x studio,imgproxy,storage-api,realtime,edge-runtime,logflare,vector,supavisor,postgres-meta",
+    "db:stop": "supabase stop",
+    "db:reset": "supabase db reset",
+    "db:lint": "supabase db lint --level warning --fail-on warning",
+    "db:types": "supabase gen types typescript --local > src/types/database.types.ts && prettier --write src/types/database.types.ts",
+    "test:integration": "vitest run -c vitest.integration.config.mts",
+    "test:e2e": "playwright test"
   },
   "dependencies": {
+    "@supabase/ssr": "^0.12.7",
+    "@supabase/supabase-js": "^2.118.0",
     "next": "16.4.2",
     "react": "19.3.0",
     "react-dom": "19.3.0",
+    "server-only": "^0.0.1",
     "zod": "^4.3.3"
   },
   "devDependencies": {
+    "@playwright/test": "^1.56.1",
     "@tailwindcss/turbopack": "^4",
     "@types/node": "^22.20.5",
     "@types/react": "^19",
@@ -29,6 +40,7 @@
     "eslint-config-next": "16.4.2",
     "prettier": "^3.9.10",
     "prettier-plugin-tailwindcss": "^0.8.1",
+    "supabase": "^2.121.0",
     "tailwindcss": "^4",
     "typescript": "^5",
     "vite-tsconfig-paths": "^6.1.1",

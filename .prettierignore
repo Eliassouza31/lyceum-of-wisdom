@@ -4,3 +4,7 @@ coverage
 package-lock.json
 next-env.d.ts
 README.txt
+test-results
+playwright-report
+supabase/.temp
+

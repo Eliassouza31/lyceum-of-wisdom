@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "ReminderApp",
+  title: { default: "ReminderApp", template: "%s · ReminderApp" },
   description: "Automatic appointment reminders for small businesses.",
 };
 
