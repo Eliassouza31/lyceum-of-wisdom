@@ -178,6 +178,7 @@ export type Database = {
           notes: string | null;
           phone_e164: string | null;
           sms_reminders_consent: boolean;
+          unsubscribe_token: string;
           updated_at: string;
         };
         ComputedFields: never;
@@ -193,6 +194,7 @@ export type Database = {
           notes?: string | null;
           phone_e164?: string | null;
           sms_reminders_consent?: boolean;
+          unsubscribe_token?: string;
           updated_at?: string;
         };
         Update: {
@@ -207,6 +209,7 @@ export type Database = {
           notes?: string | null;
           phone_e164?: string | null;
           sms_reminders_consent?: boolean;
+          unsubscribe_token?: string;
           updated_at?: string;
         };
         Relationships: [
@@ -267,6 +270,91 @@ export type Database = {
           },
         ];
       };
+      message_templates: {
+        Row: {
+          body: string;
+          business_id: string;
+          channel: Database["public"]["Enums"]["reminder_channel"];
+          created_at: string;
+          id: string;
+          subject: string;
+          updated_at: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          body: string;
+          business_id: string;
+          channel?: Database["public"]["Enums"]["reminder_channel"];
+          created_at?: string;
+          id?: string;
+          subject: string;
+          updated_at?: string;
+        };
+        Update: {
+          body?: string;
+          business_id?: string;
+          channel?: Database["public"]["Enums"]["reminder_channel"];
+          created_at?: string;
+          id?: string;
+          subject?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "message_templates_business_id_fkey";
+            columns: ["business_id"];
+            isOneToOne: false;
+            referencedRelation: "businesses";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      notification_events: {
+        Row: {
+          business_id: string;
+          created_at: string;
+          detail: NonNullable<Json>;
+          event: Database["public"]["Enums"]["notification_event_type"];
+          id: string;
+          job_id: string;
+          provider_event_id: string | null;
+        };
+        ComputedFields: never;
+        Insert: {
+          business_id: string;
+          created_at?: string;
+          detail?: NonNullable<Json>;
+          event: Database["public"]["Enums"]["notification_event_type"];
+          id?: string;
+          job_id: string;
+          provider_event_id?: string | null;
+        };
+        Update: {
+          business_id?: string;
+          created_at?: string;
+          detail?: NonNullable<Json>;
+          event?: Database["public"]["Enums"]["notification_event_type"];
+          id?: string;
+          job_id?: string;
+          provider_event_id?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "notification_events_business_id_fkey";
+            columns: ["business_id"];
+            isOneToOne: false;
+            referencedRelation: "businesses";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "notification_events_job_id_fkey";
+            columns: ["job_id"];
+            isOneToOne: false;
+            referencedRelation: "reminder_jobs";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       profiles: {
         Row: {
           created_at: string;
@@ -289,14 +377,235 @@ export type Database = {
         };
         Relationships: [];
       };
+      reminder_jobs: {
+        Row: {
+          appointment_id: string;
+          attempts: number;
+          business_id: string;
+          channel: Database["public"]["Enums"]["reminder_channel"];
+          created_at: string;
+          id: string;
+          last_error: string | null;
+          locked_at: string | null;
+          next_attempt_at: string | null;
+          offset_minutes: number;
+          provider_message_id: string | null;
+          rule_id: string | null;
+          send_at: string;
+          sent_at: string | null;
+          skip_reason: string | null;
+          status: Database["public"]["Enums"]["reminder_job_status"];
+          updated_at: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          appointment_id: string;
+          attempts?: number;
+          business_id: string;
+          channel: Database["public"]["Enums"]["reminder_channel"];
+          created_at?: string;
+          id?: string;
+          last_error?: string | null;
+          locked_at?: string | null;
+          next_attempt_at?: string | null;
+          offset_minutes: number;
+          provider_message_id?: string | null;
+          rule_id?: string | null;
+          send_at: string;
+          sent_at?: string | null;
+          skip_reason?: string | null;
+          status?: Database["public"]["Enums"]["reminder_job_status"];
+          updated_at?: string;
+        };
+        Update: {
+          appointment_id?: string;
+          attempts?: number;
+          business_id?: string;
+          channel?: Database["public"]["Enums"]["reminder_channel"];
+          created_at?: string;
+          id?: string;
+          last_error?: string | null;
+          locked_at?: string | null;
+          next_attempt_at?: string | null;
+          offset_minutes?: number;
+          provider_message_id?: string | null;
+          rule_id?: string | null;
+          send_at?: string;
+          sent_at?: string | null;
+          skip_reason?: string | null;
+          status?: Database["public"]["Enums"]["reminder_job_status"];
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "reminder_jobs_appointment_id_business_id_fkey";
+            columns: ["appointment_id", "business_id"];
+            isOneToOne: false;
+            referencedRelation: "appointments";
+            referencedColumns: ["id", "business_id"];
+          },
+          {
+            foreignKeyName: "reminder_jobs_rule_id_fkey";
+            columns: ["rule_id"];
+            isOneToOne: false;
+            referencedRelation: "reminder_rules";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      reminder_rules: {
+        Row: {
+          business_id: string;
+          channel: Database["public"]["Enums"]["reminder_channel"];
+          created_at: string;
+          id: string;
+          is_active: boolean;
+          offset_minutes: number;
+          updated_at: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          business_id: string;
+          channel?: Database["public"]["Enums"]["reminder_channel"];
+          created_at?: string;
+          id?: string;
+          is_active?: boolean;
+          offset_minutes: number;
+          updated_at?: string;
+        };
+        Update: {
+          business_id?: string;
+          channel?: Database["public"]["Enums"]["reminder_channel"];
+          created_at?: string;
+          id?: string;
+          is_active?: boolean;
+          offset_minutes?: number;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "reminder_rules_business_id_fkey";
+            columns: ["business_id"];
+            isOneToOne: false;
+            referencedRelation: "businesses";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      suppressions: {
+        Row: {
+          address: string;
+          business_id: string | null;
+          channel: Database["public"]["Enums"]["reminder_channel"];
+          created_at: string;
+          id: string;
+          reason: Database["public"]["Enums"]["suppression_reason"];
+        };
+        ComputedFields: never;
+        Insert: {
+          address: string;
+          business_id?: string | null;
+          channel: Database["public"]["Enums"]["reminder_channel"];
+          created_at?: string;
+          id?: string;
+          reason: Database["public"]["Enums"]["suppression_reason"];
+        };
+        Update: {
+          address?: string;
+          business_id?: string | null;
+          channel?: Database["public"]["Enums"]["reminder_channel"];
+          created_at?: string;
+          id?: string;
+          reason?: Database["public"]["Enums"]["suppression_reason"];
+        };
+        Relationships: [
+          {
+            foreignKeyName: "suppressions_business_id_fkey";
+            columns: ["business_id"];
+            isOneToOne: false;
+            referencedRelation: "businesses";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      usage_counters: {
+        Row: {
+          business_id: string;
+          emails_sent: number;
+          period_start: string;
+          sms_sent: number;
+        };
+        ComputedFields: never;
+        Insert: {
+          business_id: string;
+          emails_sent?: number;
+          period_start: string;
+          sms_sent?: number;
+        };
+        Update: {
+          business_id?: string;
+          emails_sent?: number;
+          period_start?: string;
+          sms_sent?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "usage_counters_business_id_fkey";
+            columns: ["business_id"];
+            isOneToOne: false;
+            referencedRelation: "businesses";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
     };
     Views: {
       [_ in never]: never;
     };
     Functions: {
+      claim_due_reminder_jobs: {
+        Args: { p_limit?: number };
+        Returns: {
+          appointment_location: string;
+          appointment_starts_at: string;
+          appointment_title: string;
+          attempts: number;
+          business_contact_email: string;
+          business_id: string;
+          business_name: string;
+          business_postal_address: string;
+          business_timezone: string;
+          client_email: string;
+          client_first_name: string;
+          job_id: string;
+          send_at: string;
+          template_body: string;
+          template_subject: string;
+          unsubscribe_token: string;
+        }[];
+      };
+      complete_reminder_job: {
+        Args: { p_job_id: string; p_provider_message_id: string };
+        Returns: undefined;
+      };
       create_business: {
         Args: { p_name: string; p_timezone: string };
         Returns: string;
+      };
+      fail_reminder_job: {
+        Args: { p_error: string; p_job_id: string; p_permanent: boolean };
+        Returns: undefined;
+      };
+      get_dispatch_secret: {
+        Args: Record<PropertyKey, never>;
+        Returns: string;
+      };
+      get_unsubscribe_info: {
+        Args: { p_token: string };
+        Returns: {
+          business_name: string;
+          subscribed: boolean;
+        }[];
       };
       has_business_role: {
         Args: {
@@ -305,8 +614,34 @@ export type Database = {
         };
         Returns: boolean;
       };
+      invoke_reminder_dispatch: {
+        Args: Record<PropertyKey, never>;
+        Returns: undefined;
+      };
       is_business_member: { Args: { p_business_id: string }; Returns: boolean };
       is_valid_timezone: { Args: { p_timezone: string }; Returns: boolean };
+      record_email_event: {
+        Args: {
+          p_detail?: Json;
+          p_event: Database["public"]["Enums"]["notification_event_type"];
+          p_permanent_bounce?: boolean;
+          p_provider_event_id: string;
+          p_provider_message_id: string;
+        };
+        Returns: boolean;
+      };
+      refresh_reminder_jobs: {
+        Args: {
+          p_appointment_id?: string;
+          p_business_id: string;
+          p_rule_id?: string;
+        };
+        Returns: undefined;
+      };
+      unsubscribe_by_token: {
+        Args: { p_ip_address?: string; p_token: string; p_user_agent?: string };
+        Returns: string;
+      };
     };
     Enums: {
       appointment_status: "scheduled" | "cancelled" | "completed" | "no_show";
@@ -319,6 +654,19 @@ export type Database = {
         | "sms_stop"
         | "booking_form";
       member_role: "owner" | "admin" | "staff";
+      notification_event_type:
+        | "queued"
+        | "sent"
+        | "delivered"
+        | "bounced"
+        | "complained"
+        | "failed"
+        | "skipped"
+        | "cancelled";
+      reminder_channel: "email" | "sms";
+      reminder_job_status:
+        "pending" | "processing" | "sent" | "failed" | "cancelled" | "skipped";
+      suppression_reason: "unsubscribed" | "hard_bounce" | "complaint";
     };
     CompositeTypes: {
       [_ in never]: never;
@@ -460,6 +808,26 @@ export const Constants = {
         "booking_form",
       ],
       member_role: ["owner", "admin", "staff"],
+      notification_event_type: [
+        "queued",
+        "sent",
+        "delivered",
+        "bounced",
+        "complained",
+        "failed",
+        "skipped",
+        "cancelled",
+      ],
+      reminder_channel: ["email", "sms"],
+      reminder_job_status: [
+        "pending",
+        "processing",
+        "sent",
+        "failed",
+        "cancelled",
+        "skipped",
+      ],
+      suppression_reason: ["unsubscribed", "hard_bounce", "complaint"],
     },
   },
 } as const;

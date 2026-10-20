@@ -14,8 +14,12 @@ export const NAV_ITEMS: NavItem[] = [
   { href: "/calendar", label: "Calendar", available: true },
   { href: "/appointments", label: "Appointments", available: true },
   { href: "/clients", label: "Clients", available: true },
-  { href: "/reminders", label: "Reminders", available: false },
-  { href: "/notifications", label: "Notification history", available: false },
+  { href: "/reminders", label: "Reminders", available: true },
+  {
+    href: "/notifications",
+    label: "Notification history",
+    available: true,
+  },
   { href: "/billing", label: "Plans & billing", available: false },
   { href: "/settings", label: "Settings", available: false },
 ];

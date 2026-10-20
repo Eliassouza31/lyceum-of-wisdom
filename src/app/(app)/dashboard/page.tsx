@@ -9,6 +9,7 @@ import { getAppointmentOverview } from "@/features/appointments/queries";
 import { requireBusinessContext } from "@/features/business/queries";
 import { timezoneLabel } from "@/features/business/timezones";
 import { getClientStats } from "@/features/clients/queries";
+import { getReminderSettings } from "@/features/reminders/queries";
 
 export const metadata: Metadata = { title: "Dashboard" };
 
@@ -41,12 +42,13 @@ async function DashboardContent({
 }: {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
-  const [{ business, fullName }, params, stats, appointments] =
+  const [{ business, fullName }, params, stats, appointments, reminders] =
     await Promise.all([
       requireBusinessContext(),
       searchParams,
       getClientStats(),
       getAppointmentOverview(),
+      getReminderSettings(),
     ]);
   const firstName = fullName.split(" ")[0];
   const setupSteps: SetupStep[] = [
@@ -62,7 +64,13 @@ async function DashboardContent({
       done: appointments.total > 0,
       href: "/appointments/new",
     },
-    { title: "Turn on email reminders", done: false },
+    {
+      title: "Set up email reminders",
+      done:
+        Boolean(reminders.postalAddress) &&
+        reminders.rules.some((rule) => rule.is_active),
+      href: "/reminders",
+    },
   ];
 
   return (

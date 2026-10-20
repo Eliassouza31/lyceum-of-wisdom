@@ -28,6 +28,8 @@ import {
 import { requireBusinessContext } from "@/features/business/queries";
 import { timezoneLabel } from "@/features/business/timezones";
 import { clientName } from "@/features/clients/format";
+import { ReminderList } from "@/features/reminders/components/reminder-list";
+import { listAppointmentReminders } from "@/features/reminders/queries";
 import {
   formatLocalDate,
   localDateOf,
@@ -57,10 +59,11 @@ async function AppointmentDetails({
   const [{ id }, query] = await Promise.all([params, searchParams]);
   if (!z.uuid().safeParse(id).success) notFound();
 
-  const [{ business }, appointment, clients] = await Promise.all([
+  const [{ business }, appointment, clients, reminders] = await Promise.all([
     requireBusinessContext(),
     getAppointment(id),
     listClientOptions(),
+    listAppointmentReminders(id),
   ]);
   const timeZone = business.timezone;
   const day = localDateOf(appointment.starts_at, timeZone);
@@ -134,6 +137,31 @@ async function AppointmentDetails({
             ),
           )}
         </div>
+      </section>
+
+      <section className="space-y-3">
+        <div className="flex items-center justify-between gap-4">
+          <h2 className="text-base font-semibold text-zinc-900 dark:text-zinc-100">
+            Reminders
+          </h2>
+          <Link
+            href="/reminders"
+            className="text-sm font-medium text-indigo-600 hover:text-indigo-500 dark:text-indigo-400"
+          >
+            Reminder settings
+          </Link>
+        </div>
+        {reminders.length === 0 ? (
+          <p className="text-sm text-zinc-600 dark:text-zinc-400">
+            No reminders for this appointment.
+          </p>
+        ) : (
+          <ReminderList
+            items={reminders}
+            timeZone={timeZone}
+            label="Reminders for this appointment"
+          />
+        )}
       </section>
 
       <section className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-zinc-200 dark:bg-zinc-900 dark:ring-zinc-800">
