@@ -94,7 +94,7 @@ test("book, view, reschedule, cancel and delete an appointment", async ({
   await page.getByLabel("Length").selectOption({ label: "45 min" });
   await page.getByLabel("Location").fill("Chair 2");
   await expect(
-    page.getByText("Times are in Central Time (Chicago)."),
+    page.locator("form").getByText("Times are in Central Time (Chicago)."),
   ).toBeVisible();
   await page.getByRole("button", { name: "Save appointment" }).click();
 
@@ -104,7 +104,7 @@ test("book, view, reschedule, cancel and delete an appointment", async ({
     page.getByText("Wed, Mar 10, 2027 · 2:30 PM – 3:15 PM CST"),
   ).toBeVisible();
   await expect(page.getByText("Scheduled", { exact: true })).toBeVisible();
-  const appointmentUrl = page.url();
+  const appointmentUrl = page.url().split("?")[0] as string;
 
   // The week and month views show it on the right day.
   await page.goto(`/calendar?view=week&date=${DAY}`);
@@ -189,10 +189,14 @@ test("a client's page links to booking for that client", async ({ page }) => {
   await page.getByRole("link", { name: /Ana Silva/ }).click();
   await page.getByRole("link", { name: "Book appointment" }).click();
   await expect(page).toHaveURL(/\/appointments\/new\?clientId=/);
-  await expect(page.getByLabel("Client")).toHaveValue(/[0-9a-f-]{36}/);
-  await expect(page.getByLabel("Client").locator("option:checked")).toHaveText(
-    "Ana Silva",
-  );
+  await expect(
+    page.getByRole("combobox", { name: "Client", exact: true }),
+  ).toHaveValue(/[0-9a-f-]{36}/);
+  await expect(
+    page
+      .getByRole("combobox", { name: "Client", exact: true })
+      .locator("option:checked"),
+  ).toHaveText("Ana Silva");
 });
 
 test("unknown or foreign appointment pages are not found", async ({ page }) => {
