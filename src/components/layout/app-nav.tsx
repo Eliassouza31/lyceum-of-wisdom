@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { Suspense } from "react";
 
 import { cn } from "@/lib/cn";
 
@@ -11,20 +12,39 @@ type NavItem = { href: string; label: string; available: boolean };
 export const NAV_ITEMS: NavItem[] = [
   { href: "/dashboard", label: "Dashboard", available: true },
   { href: "/calendar", label: "Calendar", available: false },
-  { href: "/clients", label: "Clients", available: false },
+  { href: "/clients", label: "Clients", available: true },
   { href: "/reminders", label: "Reminders", available: false },
   { href: "/notifications", label: "Notification history", available: false },
   { href: "/billing", label: "Plans & billing", available: false },
   { href: "/settings", label: "Settings", available: false },
 ];
 
-export function AppNav({ onNavigate }: { onNavigate?: () => void }) {
-  const pathname = usePathname();
+type NavProps = { onNavigate?: () => void };
+
+export function AppNav({ onNavigate }: NavProps) {
+  // The pathname is only known at request time on dynamic routes such as
+  // /clients/[id]; until then the menu renders without a highlighted item.
+  return (
+    <Suspense fallback={<NavList pathname={null} onNavigate={onNavigate} />}>
+      <CurrentNavList onNavigate={onNavigate} />
+    </Suspense>
+  );
+}
+
+function CurrentNavList({ onNavigate }: NavProps) {
+  return <NavList pathname={usePathname()} onNavigate={onNavigate} />;
+}
+
+function NavList({
+  pathname,
+  onNavigate,
+}: NavProps & { pathname: string | null }) {
   return (
     <nav aria-label="Main" className="space-y-1">
       {NAV_ITEMS.map((item) => {
         const active =
-          pathname === item.href || pathname.startsWith(`${item.href}/`);
+          pathname !== null &&
+          (pathname === item.href || pathname.startsWith(`${item.href}/`));
         if (!item.available) {
           return (
             <span

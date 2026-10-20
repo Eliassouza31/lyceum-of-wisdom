@@ -47,9 +47,9 @@ export type TestUser = {
 /** Creates a confirmed user through the admin API and returns a client signed in as that user. */
 export async function createTestUser(
   fullName = "Test User",
+  password = `Passw0rd-${randomUUID()}`,
 ): Promise<TestUser> {
   const email = `test-${randomUUID()}@example.com`;
-  const password = `Passw0rd-${randomUUID()}`;
   const { data, error } = await adminClient().auth.admin.createUser({
     email,
     password,
