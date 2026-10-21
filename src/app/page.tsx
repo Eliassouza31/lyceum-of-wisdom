@@ -1,4 +1,9 @@
-// Temporary home page for Phase 2. The full marketing landing page is built in Phase 10.
+import Link from "next/link";
+
+import { Logo } from "@/components/brand/logo";
+import { buttonClasses } from "@/components/ui/button";
+
+// Simple public home page. The full marketing landing page is built in Phase 10.
 const highlights = [
   {
     title: "Automatic reminders",
@@ -17,32 +22,62 @@ const highlights = [
 
 export default function Home() {
   return (
-    <main className="flex flex-1 flex-col items-center justify-center px-4 py-24 sm:px-6">
-      <div className="w-full max-w-3xl text-center">
-        <span className="inline-flex items-center rounded-full border border-zinc-200 px-3 py-1 text-xs font-medium text-zinc-600 dark:border-zinc-800 dark:text-zinc-400">
-          Coming soon
-        </span>
-        <h1 className="mt-6 text-4xl font-semibold tracking-tight text-balance sm:text-5xl">
-          Appointment reminders that run themselves
-        </h1>
-        <p className="mx-auto mt-4 max-w-xl text-lg text-pretty text-zinc-600 dark:text-zinc-400">
-          Schedule appointments, and we remind your clients automatically, so
-          your calendar stays full.
-        </p>
-        <ul className="mt-12 grid gap-4 text-left sm:grid-cols-3">
-          {highlights.map((item) => (
-            <li
-              key={item.title}
-              className="rounded-xl border border-zinc-200 p-5 dark:border-zinc-800"
+    <>
+      <header className="mx-auto flex w-full max-w-5xl items-center justify-between gap-4 px-4 py-4 sm:px-6">
+        <Logo />
+        <nav className="flex items-center gap-2">
+          <Link
+            href="/login"
+            className={buttonClasses("ghost", "whitespace-nowrap")}
+          >
+            Log in
+          </Link>
+          {/* On phones the hero buttons below already offer sign-up. */}
+          <div className="hidden sm:block">
+            <Link href="/signup" className={buttonClasses("primary")}>
+              Start free trial
+            </Link>
+          </div>
+        </nav>
+      </header>
+      <main className="flex flex-1 flex-col items-center justify-center px-4 py-20 sm:px-6">
+        <div className="w-full max-w-3xl text-center">
+          <h1 className="text-4xl font-semibold tracking-tight text-balance sm:text-5xl">
+            Appointment reminders that run themselves
+          </h1>
+          <p className="mx-auto mt-4 max-w-xl text-lg text-pretty text-zinc-600 dark:text-zinc-400">
+            Schedule appointments, and we remind your clients automatically, so
+            your calendar stays full.
+          </p>
+          <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
+            <Link
+              href="/signup"
+              className={buttonClasses("primary", "w-full sm:w-auto")}
             >
-              <h2 className="font-medium">{item.title}</h2>
-              <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
-                {item.description}
-              </p>
-            </li>
-          ))}
-        </ul>
-      </div>
-    </main>
+              Create your free account
+            </Link>
+            <Link
+              href="/login"
+              className={buttonClasses("secondary", "w-full sm:w-auto")}
+            >
+              I already have an account
+            </Link>
+          </div>
+          <ul className="mt-14 grid gap-4 text-left sm:grid-cols-3">
+            {highlights.map((item) => (
+              <li
+                key={item.title}
+                className="rounded-xl border border-zinc-200 p-5 dark:border-zinc-800"
+              >
+                <h2 className="font-medium">{item.title}</h2>
+                <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
+                  {item.description}
+                </p>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </main>
+    </>
   );
 }
