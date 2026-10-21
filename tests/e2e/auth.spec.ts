@@ -32,6 +32,21 @@ test("protected pages redirect visitors to sign in", async ({ page }) => {
   ).toBeVisible();
 });
 
+test("home page links visitors to sign up and sign in", async ({ page }) => {
+  await page.goto("/");
+  await page.getByRole("link", { name: "Create your free account" }).click();
+  await expect(
+    page.getByRole("heading", { name: "Create your account" }),
+  ).toBeVisible();
+
+  await page.goto("/");
+  await page.getByRole("link", { name: "Log in" }).click();
+  await expect(
+    page.getByRole("heading", { name: "Sign in to your account" }),
+  ).toBeVisible();
+  await expectNoHorizontalScroll(page);
+});
+
 test("sign-up validates input and sends a confirmation email", async ({
   page,
 }) => {
