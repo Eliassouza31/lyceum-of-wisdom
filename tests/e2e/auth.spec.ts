@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test, type Page } from "./fixtures";
 
 import { getEmailLink } from "./mailbox";
 
@@ -151,6 +151,23 @@ test("wrong passwords show a clear error", async ({ page }) => {
   await signIn(page, "WrongPassw0rd");
   await expect(page.getByText("Incorrect email or password.")).toBeVisible();
   await expect(page.getByLabel("Email")).toHaveValue(email);
+});
+
+test("repeated sign-in attempts are rate limited", async ({ page }) => {
+  const target = `target-${randomUUID().slice(0, 8)}@example.com`;
+  const attempt = async () => {
+    await page.goto("/login");
+    await page.getByLabel("Email").fill(target);
+    await page.getByLabel("Password").fill("WrongPassw0rd");
+    await page.getByRole("button", { name: "Sign in" }).click();
+  };
+  // The limit is 10 attempts per email address every 15 minutes.
+  for (let i = 0; i < 10; i++) {
+    await attempt();
+    await expect(page.getByText("Incorrect email or password.")).toBeVisible();
+  }
+  await attempt();
+  await expect(page.getByText(/Too many attempts/)).toBeVisible();
 });
 
 test("sign-in returns to the page that was requested", async ({ page }) => {
