@@ -83,6 +83,11 @@ export function todayIn(timeZone: string, now: Date = new Date()): string {
   return localDateOf(now, timeZone);
 }
 
+/** First day of the current month in the time zone, as usage is counted. */
+export function monthStartIn(timeZone: string, now: Date = new Date()): string {
+  return `${todayIn(timeZone, now).slice(0, 8)}01`;
+}
+
 function parseLocalDate(value: string) {
   const match = LOCAL_DATE.exec(value);
   if (!match) return null;

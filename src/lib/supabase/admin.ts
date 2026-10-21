@@ -10,7 +10,8 @@ import { getSupabaseConfig } from "./config";
 /**
  * Supabase client with the secret key: it bypasses Row Level Security.
  * Use it ONLY in server routes that are not tied to a signed-in user (the
- * reminder dispatcher and the Resend webhook), never in pages or actions.
+ * reminder dispatcher and the Resend and Stripe webhooks) and in the billing
+ * actions after they check the member's role; never in pages.
  * Returns null when SUPABASE_SECRET_KEY is not set.
  */
 export function createSupabaseAdminClient() {

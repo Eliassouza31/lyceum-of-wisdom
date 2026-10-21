@@ -6,6 +6,7 @@ import { AppNav } from "@/components/layout/app-nav";
 import { MobileNav } from "@/components/layout/mobile-nav";
 import { Button } from "@/components/ui/button";
 import { signOutAction } from "@/features/auth/actions";
+import { BillingBanner } from "@/features/billing/components/billing-banner";
 import { requireBusinessContext } from "@/features/business/queries";
 
 async function AccountMenu() {
@@ -32,7 +33,12 @@ async function AccountMenu() {
 async function AuthorizedContent({ children }: { children: ReactNode }) {
   // Redirects to /login or /onboarding before any page content renders.
   await requireBusinessContext();
-  return children;
+  return (
+    <>
+      <BillingBanner />
+      {children}
+    </>
+  );
 }
 
 function ContentSkeleton() {

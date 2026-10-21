@@ -4,6 +4,7 @@ import { requireBusinessContext } from "@/features/business/queries";
 import { logger } from "@/lib/logger";
 import { getServerEnv } from "@/lib/server-env";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { monthStartIn } from "@/lib/time";
 import type { Database } from "@/types/database.types";
 
 import {
@@ -144,8 +145,7 @@ export async function getMonthlyEmailCount(): Promise<number> {
     .from("usage_counters")
     .select("emails_sent")
     .eq("business_id", business.id)
-    .order("period_start", { ascending: false })
-    .limit(1)
+    .eq("period_start", monthStartIn(business.timezone))
     .maybeSingle();
   if (error) loadFailed("reminders.usage_failed", error.message);
   return data?.emails_sent ?? 0;
