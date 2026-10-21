@@ -16,6 +16,8 @@ export const SKIP_REASON_LABELS: Record<string, string> = {
     "This address is blocked: an earlier email bounced or was marked as spam.",
   missing_postal_address:
     "Your business mailing address is missing. Add it on the Reminders page.",
+  quota_exceeded:
+    "Your plan's monthly email limit was reached. Upgrade on the Plans & billing page.",
 };
 
 /**

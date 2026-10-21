@@ -1,6 +1,6 @@
 "use client";
 
-import type { ReactNode } from "react";
+import type { ComponentProps, ReactNode } from "react";
 import { useFormStatus } from "react-dom";
 
 import { Button } from "./button";
@@ -11,10 +11,12 @@ export function SubmitButton({
   children,
   pendingLabel,
   className,
+  variant,
 }: {
   children: ReactNode;
   pendingLabel: string;
   className?: string;
+  variant?: ComponentProps<typeof Button>["variant"];
 }) {
   const { pending } = useFormStatus();
   return (
@@ -23,6 +25,7 @@ export function SubmitButton({
       disabled={pending}
       aria-disabled={pending}
       className={className}
+      variant={variant}
     >
       {pending ? (
         <>

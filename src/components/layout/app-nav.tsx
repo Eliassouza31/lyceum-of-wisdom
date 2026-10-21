@@ -20,7 +20,7 @@ export const NAV_ITEMS: NavItem[] = [
     label: "Notification history",
     available: true,
   },
-  { href: "/billing", label: "Plans & billing", available: false },
+  { href: "/billing", label: "Plans & billing", available: true },
   { href: "/settings", label: "Settings", available: false },
 ];
 

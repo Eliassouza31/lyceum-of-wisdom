@@ -14,6 +14,14 @@ const optionalSecret = z.preprocess(
  * every one is optional so the app still runs before email is set up; the
  * features that need them report what is missing.
  */
+const prefixedSecret = (prefixes: string[]) =>
+  optionalSecret.refine(
+    (value) =>
+      value === undefined ||
+      prefixes.some((prefix) => value.startsWith(prefix)),
+    `must start with ${prefixes.join(" or ")}`,
+  );
+
 const serverEnvSchema = z.object({
   SUPABASE_SECRET_KEY: optionalSecret,
   RESEND_API_KEY: optionalSecret,
@@ -34,6 +42,14 @@ const serverEnvSchema = z.object({
       .transform((value) => value.replace(/\/+$/, ""))
       .default("https://api.resend.com"),
   ),
+  // Stripe > Developers > API keys. Test keys start with sk_test_.
+  STRIPE_SECRET_KEY: prefixedSecret(["sk_", "rk_"]),
+  // Stripe > Developers > Webhooks > your endpoint > Signing secret.
+  STRIPE_WEBHOOK_SECRET: prefixedSecret(["whsec_"]),
+  // Stripe > Product catalog > each plan's monthly price.
+  STRIPE_PRICE_BASIC: prefixedSecret(["price_"]),
+  STRIPE_PRICE_PRO: prefixedSecret(["price_"]),
+  STRIPE_PRICE_BUSINESS: prefixedSecret(["price_"]),
 });
 
 export type ServerEnv = z.infer<typeof serverEnvSchema>;

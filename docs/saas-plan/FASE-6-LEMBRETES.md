@@ -110,4 +110,4 @@ Sem esse passo os lembretes funcionam, só não aparece "Delivered" no históric
 
 ## Próxima fase
 
-**Fase 7 — Planos e pagamento (Stripe):** período de teste, planos Basic/Pro/Business, cota mensal de e-mails e pausa dos lembretes quando a assinatura vencer.
+**[Fase 7](FASE-7-PAGAMENTOS.md) — Planos e pagamento (Stripe):** período de teste, planos Basic/Pro/Business, cota mensal de e-mails e pausa dos lembretes quando a assinatura vencer.

@@ -492,6 +492,79 @@ export type Database = {
           },
         ];
       };
+      stripe_events: {
+        Row: {
+          id: string;
+          processed_at: string;
+          type: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          id: string;
+          processed_at?: string;
+          type: string;
+        };
+        Update: {
+          id?: string;
+          processed_at?: string;
+          type?: string;
+        };
+        Relationships: [];
+      };
+      subscriptions: {
+        Row: {
+          business_id: string;
+          cancel_at_period_end: boolean;
+          created_at: string;
+          current_period_end: string | null;
+          past_due_since: string | null;
+          plan: Database["public"]["Enums"]["plan_tier"];
+          status: string;
+          stripe_customer_id: string | null;
+          stripe_price_id: string | null;
+          stripe_subscription_id: string | null;
+          trial_ends_at: string | null;
+          updated_at: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          business_id: string;
+          cancel_at_period_end?: boolean;
+          created_at?: string;
+          current_period_end?: string | null;
+          past_due_since?: string | null;
+          plan?: Database["public"]["Enums"]["plan_tier"];
+          status?: string;
+          stripe_customer_id?: string | null;
+          stripe_price_id?: string | null;
+          stripe_subscription_id?: string | null;
+          trial_ends_at?: string | null;
+          updated_at?: string;
+        };
+        Update: {
+          business_id?: string;
+          cancel_at_period_end?: boolean;
+          created_at?: string;
+          current_period_end?: string | null;
+          past_due_since?: string | null;
+          plan?: Database["public"]["Enums"]["plan_tier"];
+          status?: string;
+          stripe_customer_id?: string | null;
+          stripe_price_id?: string | null;
+          stripe_subscription_id?: string | null;
+          trial_ends_at?: string | null;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "subscriptions_business_id_fkey";
+            columns: ["business_id"];
+            isOneToOne: true;
+            referencedRelation: "businesses";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       suppressions: {
         Row: {
           address: string;
@@ -620,6 +693,10 @@ export type Database = {
       };
       is_business_member: { Args: { p_business_id: string }; Returns: boolean };
       is_valid_timezone: { Args: { p_timezone: string }; Returns: boolean };
+      plan_monthly_email_limit: {
+        Args: { p_plan: Database["public"]["Enums"]["plan_tier"] };
+        Returns: number;
+      };
       record_email_event: {
         Args: {
           p_detail?: Json;
@@ -637,6 +714,14 @@ export type Database = {
           p_rule_id?: string;
         };
         Returns: undefined;
+      };
+      subscription_allows_reminders: {
+        Args: {
+          p_past_due_since: string;
+          p_status: string;
+          p_trial_ends_at: string;
+        };
+        Returns: boolean;
       };
       unsubscribe_by_token: {
         Args: { p_ip_address?: string; p_token: string; p_user_agent?: string };
@@ -663,6 +748,7 @@ export type Database = {
         | "failed"
         | "skipped"
         | "cancelled";
+      plan_tier: "trial" | "basic" | "pro" | "business";
       reminder_channel: "email" | "sms";
       reminder_job_status:
         "pending" | "processing" | "sent" | "failed" | "cancelled" | "skipped";
@@ -818,6 +904,7 @@ export const Constants = {
         "skipped",
         "cancelled",
       ],
+      plan_tier: ["trial", "basic", "pro", "business"],
       reminder_channel: ["email", "sms"],
       reminder_job_status: [
         "pending",
