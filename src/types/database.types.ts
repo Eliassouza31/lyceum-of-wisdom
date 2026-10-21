@@ -377,6 +377,25 @@ export type Database = {
         };
         Relationships: [];
       };
+      rate_limits: {
+        Row: {
+          hits: number;
+          key: string;
+          window_started_at: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          hits?: number;
+          key: string;
+          window_started_at?: string;
+        };
+        Update: {
+          hits?: number;
+          key?: string;
+          window_started_at?: string;
+        };
+        Relationships: [];
+      };
       reminder_jobs: {
         Row: {
           appointment_id: string;
@@ -660,6 +679,10 @@ export type Database = {
       complete_reminder_job: {
         Args: { p_job_id: string; p_provider_message_id: string };
         Returns: undefined;
+      };
+      consume_rate_limit: {
+        Args: { p_key: string; p_max: number; p_window_seconds: number };
+        Returns: boolean;
       };
       create_business: {
         Args: { p_name: string; p_timezone: string };

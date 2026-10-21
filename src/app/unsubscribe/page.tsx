@@ -9,6 +9,7 @@ import {
   getUnsubscribeInfo,
   parseUnsubscribeToken,
 } from "@/features/reminders/unsubscribe";
+import { RATE_LIMITED_MESSAGE } from "@/lib/rate-limit";
 
 export const metadata: Metadata = {
   title: "Unsubscribe",
@@ -44,6 +45,9 @@ async function UnsubscribeContent({
 
   return (
     <form action={unsubscribeAction.bind(null, token)} className="space-y-5">
+      {params.limited === "1" ? (
+        <Alert tone="error">{RATE_LIMITED_MESSAGE}</Alert>
+      ) : null}
       <p className="text-sm text-zinc-700 dark:text-zinc-300">
         Stop receiving appointment reminder emails from{" "}
         <strong>{info.businessName}</strong>?

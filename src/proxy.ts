@@ -74,7 +74,7 @@ function redirectWithCookies(url: URL, from: NextResponse): NextResponse {
 
 export const config = {
   matcher: [
-    // Everything except API routes, Next.js internals and static files.
-    "/((?!api/|_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|txt|xml)$).*)",
+    // Everything except API routes, the Sentry tunnel, Next.js internals and static files.
+    "/((?!api/|monitoring|_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|txt|xml)$).*)",
   ],
 };

@@ -3,7 +3,7 @@ import "server-only";
 import { z } from "zod";
 
 import { logger } from "@/lib/logger";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 
 const tokenSchema = z.uuid();
 
@@ -12,12 +12,24 @@ export function parseUnsubscribeToken(value: unknown): string | null {
   return parsed.success ? parsed.data : null;
 }
 
+// The unsubscribe functions are not open to the public database key: only
+// this server calls them, after its rate limit (see the security migration).
+function adminClient() {
+  const admin = createSupabaseAdminClient();
+  if (!admin) {
+    logger.error("unsubscribe.not_configured", {
+      missing: "SUPABASE_SECRET_KEY",
+    });
+    throw new Error("This page is not available right now. Please try again.");
+  }
+  return admin;
+}
+
 /** The business behind an unsubscribe link, or null when the link is not valid. */
 export async function getUnsubscribeInfo(
   token: string,
 ): Promise<{ businessName: string; subscribed: boolean } | null> {
-  const supabase = await createSupabaseServerClient();
-  const { data, error } = await supabase
+  const { data, error } = await adminClient()
     .rpc("get_unsubscribe_info", { p_token: token })
     .maybeSingle();
   if (error) {
@@ -33,8 +45,7 @@ export async function unsubscribe(
   token: string,
   request: { ipAddress: string | null; userAgent: string | null },
 ): Promise<boolean> {
-  const supabase = await createSupabaseServerClient();
-  const { data, error } = await supabase.rpc("unsubscribe_by_token", {
+  const { data, error } = await adminClient().rpc("unsubscribe_by_token", {
     p_token: token,
     p_ip_address: request.ipAddress ?? undefined,
     p_user_agent: request.userAgent ?? undefined,
@@ -44,9 +55,4 @@ export async function unsubscribe(
     throw new Error("We could not unsubscribe you. Please try again.");
   }
   return data !== null;
-}
-
-/** The visitor's IP as reported by Vercel's proxy. */
-export function clientIp(headers: Headers): string | null {
-  return headers.get("x-forwarded-for")?.split(",")[0]?.trim() || null;
 }

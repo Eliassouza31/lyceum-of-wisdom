@@ -1,5 +1,6 @@
 "use server";
 
+import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 
 import { safeNextPath } from "@/lib/auth/redirects";
@@ -11,6 +12,12 @@ import {
   type FormState,
 } from "@/lib/forms";
 import { logger } from "@/lib/logger";
+import {
+  clientIp,
+  consumeRateLimit,
+  RATE_LIMITED_MESSAGE,
+  type RateLimitName,
+} from "@/lib/rate-limit";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 import { authErrorMessage } from "./errors";
@@ -27,6 +34,20 @@ function confirmUrl(next: string): string {
   return url.toString();
 }
 
+/** Counts the attempt against every limit; false when any of them is reached. */
+async function withinRateLimits(
+  limits: Array<[RateLimitName, string | null]>,
+): Promise<boolean> {
+  const results = await Promise.all(
+    limits.map(([name, value]) => consumeRateLimit(name, value)),
+  );
+  return results.every(Boolean);
+}
+
+function rateLimited(values: Record<string, string>): FormState {
+  return { status: "error", message: RATE_LIMITED_MESSAGE, values };
+}
+
 export async function signUpAction(
   _previous: FormState,
   formData: FormData,
@@ -35,6 +56,11 @@ export async function signUpAction(
   const values = pick(raw, ["fullName", "email"]);
   const parsed = signUpSchema.safeParse(raw);
   if (!parsed.success) return validationError(parsed.error, values);
+
+  const ip = clientIp(await headers());
+  if (!(await withinRateLimits([["sign-up:ip", ip]]))) {
+    return rateLimited(values);
+  }
 
   const supabase = await createSupabaseServerClient();
   const { data, error } = await supabase.auth.signUp({
@@ -73,6 +99,13 @@ export async function signInAction(
   const parsed = signInSchema.safeParse(raw);
   if (!parsed.success) return validationError(parsed.error, values);
 
+  const ip = clientIp(await headers());
+  const allowed = await withinRateLimits([
+    ["sign-in:ip", ip],
+    ["sign-in:email", parsed.data.email],
+  ]);
+  if (!allowed) return rateLimited(values);
+
   const supabase = await createSupabaseServerClient();
   const { data, error } = await supabase.auth.signInWithPassword(parsed.data);
 
@@ -103,6 +136,13 @@ export async function requestPasswordResetAction(
   const values = pick(raw, ["email"]);
   const parsed = forgotPasswordSchema.safeParse(raw);
   if (!parsed.success) return validationError(parsed.error, values);
+
+  const ip = clientIp(await headers());
+  const allowed = await withinRateLimits([
+    ["password-reset:ip", ip],
+    ["password-reset:email", parsed.data.email],
+  ]);
+  if (!allowed) return rateLimited(values);
 
   const supabase = await createSupabaseServerClient();
   const { error } = await supabase.auth.resetPasswordForEmail(

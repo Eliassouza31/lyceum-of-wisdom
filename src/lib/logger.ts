@@ -1,3 +1,5 @@
+import * as Sentry from "@sentry/nextjs";
+
 type LogLevel = "debug" | "info" | "warn" | "error";
 
 export type LogContext = Record<string, unknown>;
@@ -55,6 +57,12 @@ export const logger = {
     write("info", message, context),
   warn: (message: string, context?: LogContext) =>
     write("warn", message, context),
-  error: (message: string, context?: LogContext) =>
-    write("error", message, context),
+  /** Also reported to Sentry (when configured), so handled failures are not missed. */
+  error: (message: string, context?: LogContext) => {
+    write("error", message, context);
+    Sentry.captureMessage(message, {
+      level: "error",
+      extra: redact(context ?? {}) as LogContext,
+    });
+  },
 };

@@ -664,8 +664,20 @@ describe("delivery events and unsubscribing", () => {
       .single();
     const token = client!.unsubscribe_token;
 
+    // Only the app's server (service role) may call these, after its rate limit.
     const anon = anonClient();
-    const { data: info } = await anon
+    const { error: anonInfoError } = await anon.rpc("get_unsubscribe_info", {
+      p_token: token,
+    });
+    expect(anonInfoError).not.toBeNull();
+    const { error: anonUnsubscribeError } = await anon.rpc(
+      "unsubscribe_by_token",
+      { p_token: token },
+    );
+    expect(anonUnsubscribeError).not.toBeNull();
+
+    const server = admin();
+    const { data: info } = await server
       .rpc("get_unsubscribe_info", { p_token: token })
       .single();
     expect(info).toEqual({
@@ -673,7 +685,7 @@ describe("delivery events and unsubscribing", () => {
       subscribed: true,
     });
 
-    const { data: businessName, error } = await anon.rpc(
+    const { data: businessName, error } = await server.rpc(
       "unsubscribe_by_token",
       { p_token: token, p_ip_address: "203.0.113.7", p_user_agent: "Test" },
     );
@@ -701,7 +713,7 @@ describe("delivery events and unsubscribing", () => {
       },
     ]);
 
-    const { data: unknown } = await anon.rpc("unsubscribe_by_token", {
+    const { data: unknown } = await server.rpc("unsubscribe_by_token", {
       p_token: "00000000-0000-4000-8000-000000000000",
     });
     expect(unknown).toBeNull();
